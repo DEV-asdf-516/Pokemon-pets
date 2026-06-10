@@ -1,4 +1,5 @@
 import { app, globalShortcut, screen } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import path from 'path'
 import fs from 'fs'
 import { PetWindowManager } from './window/pet-window-manager'
@@ -15,9 +16,11 @@ import type { ChatMessage, Settings } from '../types'
 let windowManager: PetWindowManager | null = null
 
 function loadEnvironment(rootDir: string): void {
-  const envPath = path.join(rootDir, '.env')
   const loadEnvFile = (process as unknown as { loadEnvFile?: (p: string) => void }).loadEnvFile
-  if (typeof loadEnvFile === 'function') {
+  if (typeof loadEnvFile !== 'function') {
+    return
+  }
+  for (const envPath of [path.join(rootDir, '.env'), path.join(app.getPath('userData'), '.env')]) {
     try {
       loadEnvFile(envPath)
     } catch (error) {
@@ -81,6 +84,8 @@ app.whenReady().then(() => {
     providerRegistry,
     settings,
   })
+
+  autoUpdater.checkForUpdatesAndNotify()
 
   globalShortcut.register('CommandOrControl+Shift+R', () => {
     if (windowManager) {

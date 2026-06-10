@@ -6,7 +6,21 @@ on:
       - 'v*'
 
 jobs:
+  create-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete ${{ github.ref_name }} --yes --cleanup-tag 2>/dev/null || true
+          gh release create ${{ github.ref_name }} --draft --title "${{ github.ref_name }}" --generate-notes
+
   build:
+    needs: create-release
     permissions:
       contents: write
     strategy:
@@ -15,8 +29,6 @@ jobs:
         include:
           - os: macos-latest
             args: --mac --arm64
-          - os: macos-13
-            args: --mac --x64
           - os: windows-latest
             args: --win
           - os: ubuntu-latest
@@ -34,7 +46,7 @@ jobs:
 
       - name: Install Linux system dependencies
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install -y libfuse2 libgtk-3-0 libnotify-dev libnss3 libxss1 libxtst6
+        run: sudo apt-get update && sudo apt-get install -y --fix-missing libfuse2 libgtk-3-0 libnotify-dev libnss3 libxss1 libxtst6
 
       - name: Install dependencies
         run: npm ci
@@ -43,3 +55,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build && npx electron-builder ${{ matrix.args }} --publish always
+
+  finalize:
+    needs: build
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit ${{ github.ref_name }} --draft=false

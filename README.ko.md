@@ -34,13 +34,15 @@ npm start
 
 다른 프로바이더로 바꾸려면 프로젝트 루트의 `.env` 파일에 키를 넣고 설정 파일을 수정하세요.
 
-첫 실행 시 `config/setting.json`이 아래 경로로 복사됩니다. 설치 후에는 이 파일을 직접 편집하세요.
+첫 실행 시 `config/setting.json`이 아래 폴더로 복사됩니다. API 키가 필요한 경우(OpenAI / Anthropic / Gemini) `.env` 파일도 같은 폴더에 넣으면 됩니다.
 
-| 플랫폼 | 경로 |
+| 플랫폼 | 폴더 |
 |---|---|
-| macOS | `~/Library/Application Support/Pokemon Pet/setting.json` |
-| Windows | `%APPDATA%\Pokemon Pet\setting.json` |
-| Linux | `~/.config/Pokemon Pet/setting.json` |
+| macOS | `~/Library/Application Support/Pokemon Pet/` |
+| Windows | `%APPDATA%\Pokemon Pet\` |
+| Linux | `~/.config/Pokemon Pet/` |
+
+파일: `setting.json` (프로바이더/모델 설정), `.env` (API 키, 선택 사항)
 
 전체 설정 가이드: [docs/AI_PROVIDERS.ko.md](docs/AI_PROVIDERS.ko.md)
 
