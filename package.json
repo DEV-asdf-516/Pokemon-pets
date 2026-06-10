@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "build": "tsc -p tsconfig.main.json && tsc -p tsconfig.renderer.json && npm run build:copy",
-    "build:copy": "mkdir -p build/renderer && cp src/renderer/index.html src/renderer/styles.css build/renderer/",
+    "build:copy": "node -e \"const fs=require('fs'); fs.mkdirSync('build/renderer',{recursive:true}); ['index.html','styles.css'].forEach(f=>fs.copyFileSync('src/renderer/'+f,'build/renderer/'+f))\"",
     "start": "npm run build && electron .",
     "create:pet": "node scripts/create-pet.js",
     "validate:pet": "node scripts/validate-pet.js",
@@ -24,12 +24,21 @@
       "!.env.*",
       ".env.example"
     ],
+    "publish": {
+      "provider": "github"
+    },
     "mac": {
       "target": [
         "dmg",
         "zip"
       ],
       "identity": null
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
     }
   },
   "license": "MIT",
