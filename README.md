@@ -4,6 +4,11 @@
 
 A transparent desktop pet powered by an LLM. Your Pokémon wanders around your screen and you can open a chat window to talk with it.
 
+# Preview
+<img width="448" height="506" alt="스크린샷 2026-06-10 오후 4 16 17" src="https://github.com/user-attachments/assets/2ebfed14-913c-4eeb-92f7-58657df8ae9d" />
+
+
+
 ## Features
 
 - **Free roaming:** The pet wanders around your screen on its own!
@@ -15,13 +20,19 @@ A transparent desktop pet powered by an LLM. Your Pokémon wanders around your s
 - **Chat history:** Chat history is saved locally.
 - **Message menu:** Right-click any message to copy, delete, or resend.
 
-## Requirements
+## Download
 
-- Node.js 18+
-- npm
-- An AI provider (Ollama runs locally with no API key; OpenAI / Anthropic / Gemini require keys)
+Get the latest release from [Releases](https://github.com/DEV-asdf-516/Pokemon-pets/releases/latest).
 
-## Setup
+| Platform | File |
+|---|---|
+| macOS (Apple Silicon) | `Pokemon-Pet-x.x.x-arm64.dmg` |
+| Windows | `Pokemon-Pet-x.x.x-Setup.exe` |
+| Linux | `Pokemon-Pet-x.x.x.AppImage` |
+
+## Development
+
+Requires Node.js 18+ and npm.
 
 ```bash
 npm install

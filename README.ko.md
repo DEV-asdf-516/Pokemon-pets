@@ -4,6 +4,9 @@
 
 LLM으로 구동되는 투명 데스크탑 펫입니다. 포켓몬이 화면을 돌아다니고, 채팅창을 열어 대화할 수 있습니다.
 
+# 미리보기
+<img width="448" height="506" alt="스크린샷 2026-06-10 오후 4 16 17" src="https://github.com/user-attachments/assets/2ebfed14-913c-4eeb-92f7-58657df8ae9d" />
+
 ## 기능
 
 - **자유 이동:** 포켓몬이 화면을 혼자 돌아다닙니다!
@@ -15,13 +18,19 @@ LLM으로 구동되는 투명 데스크탑 펫입니다. 포켓몬이 화면을 
 - **대화 기록 저장:** 채팅 내역이 로컬에 저장됩니다.
 - **메시지 메뉴:** 메시지를 우클릭하면 복사·삭제·재전송이 가능합니다.
 
-## 요구 사항
+## 다운로드
 
-- Node.js 18+
-- npm
-- AI 프로바이더 (Ollama는 / OpenAI / Anthropic / Gemini 중 택 일)
+최신 릴리즈는 [Releases](https://github.com/DEV-asdf-516/Pokemon-pets/releases/latest)에서 받을 수 있습니다.
 
-## 설치 및 실행
+| 플랫폼 | 파일 |
+|---|---|
+| macOS (Apple Silicon) | `Pokemon-Pet-x.x.x-arm64.dmg` |
+| Windows | `Pokemon-Pet-x.x.x-Setup.exe` |
+| Linux | `Pokemon-Pet-x.x.x.AppImage` |
+
+## 개발 환경
+
+Node.js 18+, npm 필요.
 
 ```bash
 npm install
