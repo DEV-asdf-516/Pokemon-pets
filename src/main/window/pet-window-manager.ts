@@ -1,0 +1,241 @@
+import { screen } from 'electron'
+import type { Display, WebContents } from 'electron'
+import { createPetWindow } from './pet-window'
+import type { PetWindow } from './pet-window'
+import type { DragOffset, PetState } from '../../types'
+
+export class PetWindowManager {
+  private readonly windows = new Map<number, PetWindow>()
+  private readonly states = new Map<number, PetState>()
+  private activeDisplayId: number | null = null
+  private dragTimer: ReturnType<typeof setInterval> | null = null
+  private dragDisplayId: number | null = null
+  private dragOffset = { x: 0, y: 0 }
+  private pendingChatOpen: boolean | undefined = undefined
+  private pendingChatWidth: number | undefined = undefined
+  private pendingChatHeight: number | undefined = undefined
+
+  constructor(
+    private readonly rootDir: string,
+    private readonly preloadPath: string,
+  ) {}
+
+  createAll(): void {
+    const primaryId = screen.getPrimaryDisplay().id
+    this.activeDisplayId = primaryId
+    for (const display of screen.getAllDisplays()) {
+      this.createForDisplay(display, display.id === primaryId)
+    }
+  }
+
+  createForDisplay(display: Display, active = false): PetWindow {
+    const existing = this.windows.get(display.id)
+    if (existing) {
+      return existing
+    }
+    const win = createPetWindow({
+      rootDir: this.rootDir,
+      preloadPath: this.preloadPath,
+      display,
+      active,
+    })
+    this.windows.set(display.id, win)
+    this.states.set(display.id, { active })
+    win.webContents.on('did-finish-load', () => this.sendState(display.id))
+    win.on('closed', () => {
+      this.windows.delete(display.id)
+      this.states.delete(display.id)
+    })
+    return win
+  }
+
+  private sendState(displayId: number): void {
+    const win = this.windows.get(displayId)
+    const state = this.states.get(displayId)
+    if (!win || win.isDestroyed() || !state) {
+      return
+    }
+    win.webContents.send('pet:set-active', state)
+  }
+
+  private setState(displayId: number, state: PetState): void {
+    this.states.set(displayId, state)
+    const win = this.windows.get(displayId)
+    if (!win || win.isDestroyed() || win.webContents.isLoadingMainFrame()) {
+      return
+    }
+    this.sendState(displayId)
+  }
+
+  syncDisplays(): void {
+    const displays = screen.getAllDisplays()
+    const displayIds = new Set(displays.map((d) => d.id))
+
+    for (const display of displays) {
+      const win = this.createForDisplay(display, false)
+      if (!win.isDestroyed()) {
+        win.setBounds(display.workArea)
+      }
+    }
+
+    for (const [displayId, win] of this.windows) {
+      if (!displayIds.has(displayId)) {
+        win.destroy()
+      }
+    }
+
+    if (this.activeDisplayId !== null && !displayIds.has(this.activeDisplayId)) {
+      this.activeDisplayId = screen.getPrimaryDisplay().id
+      this.activateDisplay(this.activeDisplayId)
+    }
+  }
+
+  getActiveWindow(): PetWindow | undefined {
+    return this.activeDisplayId !== null ? this.windows.get(this.activeDisplayId) : undefined
+  }
+
+  getWindowForSender(sender: WebContents): PetWindow | undefined {
+    for (const win of this.windows.values()) {
+      if (win.webContents === sender) {
+        return win
+      }
+    }
+    return undefined
+  }
+
+  broadcast(channel: string, payload: unknown): void {
+    for (const win of this.windows.values()) {
+      if (win.isDestroyed() || win.webContents.isLoadingMainFrame()) {
+        continue
+      }
+      win.webContents.send(channel, payload)
+    }
+  }
+
+  broadcastExcept(channel: string, payload: unknown, excludeSender: WebContents): void {
+    for (const win of this.windows.values()) {
+      if (win.webContents === excludeSender) {
+        continue
+      }
+      if (win.isDestroyed() || win.webContents.isLoadingMainFrame()) {
+        continue
+      }
+      win.webContents.send(channel, payload)
+    }
+  }
+
+  setIgnoreMouseForSender(sender: WebContents, ignore: boolean): void {
+    const win = this.getWindowForSender(sender)
+    if (win && !win.isDestroyed()) {
+      win.setIgnoreMouseEvents(ignore, { forward: true })
+    }
+  }
+
+  activateDisplay(displayId: number, payload: Partial<PetState> = {}): void {
+    const target = this.windows.get(displayId)
+    if (!target || target.isDestroyed()) {
+      return
+    }
+
+    const previous = this.getActiveWindow()
+    if (previous && previous !== target && !previous.isDestroyed()) {
+      this.setState(previous.displayId, { active: false })
+      previous.setIgnoreMouseEvents(true, { forward: true })
+    }
+
+    this.activeDisplayId = displayId
+    target.setIgnoreMouseEvents(!payload.dragging, { forward: true })
+    const state: PetState = { active: true, ...payload }
+    if (this.dragTimer && this.pendingChatOpen !== undefined) {
+      state.chatOpen = this.pendingChatOpen
+      state.chatWidth = this.pendingChatWidth
+      state.chatHeight = this.pendingChatHeight
+    }
+    this.setState(displayId, state)
+    target.showInactive()
+    target.moveTop()
+  }
+
+  recallAtCursor(): void {
+    const cursor = screen.getCursorScreenPoint()
+    const display = screen.getDisplayNearestPoint(cursor)
+    this.activateDisplay(display.id, {
+      x: cursor.x - display.workArea.x,
+      y: cursor.y - display.workArea.y,
+      recall: true,
+    })
+  }
+
+  startDrag(sender: WebContents, offset: DragOffset): void {
+    this.stopDrag(false)
+    const source = this.getWindowForSender(sender)
+    if (!source) {
+      return
+    }
+
+    this.activeDisplayId = source.displayId
+    this.dragDisplayId = source.displayId
+    this.dragOffset = {
+      x: Number(offset?.x) || 0,
+      y: Number(offset?.y) || 0,
+    }
+    this.pendingChatOpen = offset?.chatOpen !== undefined ? Boolean(offset.chatOpen) : undefined
+    this.pendingChatWidth = offset?.chatWidth !== undefined ? Number(offset.chatWidth) : undefined
+    this.pendingChatHeight = offset?.chatHeight !== undefined ? Number(offset.chatHeight) : undefined
+
+    this.dragTimer = setInterval(() => {
+      const cursor = screen.getCursorScreenPoint()
+      const display = screen.getDisplayNearestPoint(cursor)
+      const position = {
+        x: cursor.x - display.workArea.x - this.dragOffset.x,
+        y: cursor.y - display.workArea.y - this.dragOffset.y,
+        dragging: true,
+      }
+
+      if (display.id !== this.dragDisplayId) {
+        this.dragDisplayId = display.id
+        this.activateDisplay(display.id, position)
+      } 
+      else {
+        const target = this.windows.get(display.id)
+        if (target && !target.isDestroyed()) {
+          target.webContents.send('pet:drag-position', position)
+        }
+      }
+    }, 16)
+  }
+
+  stopDrag(notify = true): void {
+    const wasDragging = Boolean(this.dragTimer)
+    if (this.dragTimer) {
+      clearInterval(this.dragTimer)
+    }
+    this.dragTimer = null
+    this.dragDisplayId = null
+    this.pendingChatOpen = undefined
+    const active = this.getActiveWindow()
+    if (notify && wasDragging && active && !active.isDestroyed()) {
+      active.webContents.send('pet:drag-stop')
+      active.setIgnoreMouseEvents(true, { forward: true })
+    }
+  }
+
+  showActive(): void {
+    const active = this.getActiveWindow()
+    if (active && !active.isDestroyed()) {
+      active.showInactive()
+      active.moveTop()
+    }
+  }
+
+  destroyAll(): void {
+    this.stopDrag()
+    for (const win of this.windows.values()) {
+      if (!win.isDestroyed()) {
+        win.destroy()
+      }
+    }
+    this.windows.clear()
+    this.states.clear()
+  }
+}

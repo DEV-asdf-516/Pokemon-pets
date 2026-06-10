@@ -1,0 +1,42 @@
+{
+  "name": "riolu-pet",
+  "version": "1.0.0",
+  "description": "Riolu desktop pet with LLM chat",
+  "main": "main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.main.json && tsc -p tsconfig.renderer.json && npm run build:copy",
+    "build:copy": "mkdir -p build/renderer && cp src/renderer/index.html src/renderer/styles.css build/renderer/",
+    "start": "npm run build && electron .",
+    "create:pet": "node scripts/create-pet.js",
+    "validate:pet": "node scripts/validate-pet.js",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac --arm64"
+  },
+  "build": {
+    "appId": "com.riolu.pet",
+    "productName": "Riolu Pet",
+    "files": [
+      "main.js",
+      "build/**/*",
+      "pets/**/*",
+      "config/**/*",
+      "!.env",
+      "!.env.*",
+      ".env.example"
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "identity": null
+    }
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^42.3.3",
+    "electron-builder": "^26.0.0",
+    "typescript": "^5.8.3",
+    "@types/node": "^22.0.0"
+  }
+}

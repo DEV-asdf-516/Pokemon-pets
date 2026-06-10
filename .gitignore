@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+
+build/
+dist/
+.claude/
+node_modules/
+_*/
