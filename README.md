@@ -1,8 +1,19 @@
 **English** | [한국어](README.ko.md)
 
-# Riolu Pet
+# Pokemon Pet
 
-A transparent desktop pet powered by an LLM. Riolu wanders around your screen and you can open a chat window to talk with it.
+A transparent desktop pet powered by an LLM. Your Pokémon wanders around your screen and you can open a chat window to talk with it.
+
+## Features
+
+- **Free roaming:** The pet wanders around your screen on its own!
+- **Chat:** Click the pet to open a chat window.
+- **Idle chatter:** When idle, the pet will speak up on its own. Add custom lines to `idlePhrases` in `pet.json`.
+- **Drag and drop:** You can drag the pet anywhere on screen.
+- **Summon shortcut:** Press `Ctrl+Shift+R` (or `Cmd+Shift+R` on macOS) from any app to teleport the pet to your cursor.
+- **Nickname:** Click the name in the chat titlebar to set a nickname.
+- **Chat history:** Chat history is saved locally.
+- **Message menu:** Right-click any message to copy, delete, or resend.
 
 ## Requirements
 
@@ -25,7 +36,7 @@ Full configuration reference: [docs/AI_PROVIDERS.md](docs/AI_PROVIDERS.md)
 
 ## Adding a new pet
 
-A reproducible procedure for creating a new character pack without changing application code:
+How to add a new Pokémon:
 
 [docs/ADDING_POKEMON.md](docs/ADDING_POKEMON.md)
 
@@ -39,3 +50,13 @@ Runtime boundaries and extension points: [ARCHITECTURE.md](ARCHITECTURE.md)
 npm run dist:mac   # macOS arm64
 npm run dist       # current platform
 ```
+
+## Notes
+
+- Only Riolu is included by default.
+- Vibe-coded.
+- The Claude and OpenAI providers have not been thoroughly tested. Please report any issues.
+
+## Disclaimer
+
+Pokémon and all related names, images, and sounds are trademarks of and © Nintendo / Creatures Inc. / GAME FREAK inc. This project is an unofficial fan work and is not affiliated with, endorsed by, or connected to Nintendo or The Pokémon Company in any way. All Pokémon assets used in this project are the property of their respective owners.
