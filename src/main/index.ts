@@ -41,9 +41,12 @@ app.on('second-instance', () => {
 app.whenReady().then(() => {
   const rootDir = path.resolve(__dirname, '../..')
   loadEnvironment(rootDir)
-  const settings = JSON.parse(
-    fs.readFileSync(path.join(rootDir, 'config/setting.json'), 'utf8'),
-  ) as Settings
+
+  const userSettingPath = path.join(app.getPath('userData'), 'setting.json')
+  if (!fs.existsSync(userSettingPath)) {
+    fs.copyFileSync(path.join(rootDir, 'config/setting.json'), userSettingPath)
+  }
+  const settings = JSON.parse(fs.readFileSync(userSettingPath, 'utf8')) as Settings
 
   const historyStore = new JsonStore<ChatMessage[]>(
     path.join(app.getPath('userData'), 'chat_history.json'),

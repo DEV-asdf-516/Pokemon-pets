@@ -30,7 +30,15 @@ npm start
 
 ## AI provider
 
-Ollama is the default and requires no API key. To switch providers, add the relevant key to `.env` in the project root and update `config/setting.json`.
+Ollama is the default and requires no API key. To switch providers, add the relevant key to `.env` in the project root and update your settings file.
+
+On first launch the app copies `config/setting.json` to a user-writable location:
+
+| Platform | Path |
+|---|---|
+| macOS | `~/Library/Application Support/Pokemon Pet/setting.json` |
+| Windows | `%APPDATA%\Pokemon Pet\setting.json` |
+| Linux | `~/.config/Pokemon Pet/setting.json` |
 
 Full configuration reference: [docs/AI_PROVIDERS.md](docs/AI_PROVIDERS.md)
 
