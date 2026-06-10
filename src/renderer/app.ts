@@ -239,6 +239,7 @@ window.petAPI.pet.onSetActive((state) => {
   isDragging = Boolean(state.dragging)
   clickThreshold = !isDragging
   applyPetPosition()
+  updateChatPos()
   if (!isDragging) {
     startWalk()
   }
@@ -835,10 +836,8 @@ document.addEventListener('mousemove', (e) => {
     if (rzDir.includes('s')) {
       const desiredPetY = newT + newH + CHAT_PET_GAP
       const maxPetY = window.innerHeight - PET_HEIGHT - SPAWN_MARGIN
-      if (petY < desiredPetY) {
-        petY = Math.min(maxPetY, desiredPetY)
-        applyPetPosition()
-      }
+      petY = Math.min(maxPetY, Math.max(SPAWN_MARGIN, desiredPetY))
+      applyPetPosition()
     }
     return
   }
@@ -905,6 +904,7 @@ rioluImg.addEventListener('click', async (event) => {
   chatOpen = !chatOpen
   chatWindow.style.display = chatOpen ? 'flex' : 'none'
   if (!chatOpen) {
+    window.petAPI.pet.notifyChatState(false)
     startWalk()
     setMouseIgnore(true)
     return
@@ -914,6 +914,8 @@ rioluImg.addEventListener('click', async (event) => {
   setMouseIgnore(false)
   updateChatPos()
   syncMouseIgnore(event.clientX, event.clientY)
+  const openRect = chatWindow.getBoundingClientRect()
+  window.petAPI.pet.notifyChatState(true, openRect.width, openRect.height)
   if (messages.childElementCount === 0 && chatHistory.length > 0) {
     renderHistory(chatHistory)
   }
@@ -935,6 +937,7 @@ document.getElementById('close-chat')!.addEventListener('click', () => {
   hideMessageMenu()
   chatOpen = false
   chatWindow.style.display = 'none'
+  window.petAPI.pet.notifyChatState(false)
   startWalk()
   setMouseIgnore(true)
 })

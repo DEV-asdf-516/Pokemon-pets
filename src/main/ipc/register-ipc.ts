@@ -31,6 +31,12 @@ export function registerIpc({
   ipcMain.on('pet:recall', () => {
     windowManager.recallAtCursor()
   })
+  ipcMain.on('pet:chat-state', (event, payload: { open: boolean; width?: number; height?: number }) => {
+    const win = windowManager.getWindowForSender(event.sender)
+    if (win) {
+      windowManager.setChatState(win.displayId, payload.open, payload.width, payload.height)
+    }
+  })
   ipcMain.on('pet:drag-start', (event, offset: DragOffset) => {
     windowManager.startDrag(event.sender, offset)
   })

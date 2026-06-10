@@ -25,6 +25,7 @@ interface PetAPI {
     saveNickname(nickname: string): Promise<boolean>
     onRecall(listener: (position: { x: number; y: number }) => void): () => void
     onSetActive(listener: (state: PetState) => void): () => void
+    notifyChatState(open: boolean, width?: number, height?: number): void
     startDrag(offset: DragOffset): void
     stopDrag(): void
     onDragPosition(listener: (position: { x: number; y: number; dragging: boolean }) => void): () => void

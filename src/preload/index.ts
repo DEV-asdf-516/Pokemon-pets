@@ -29,6 +29,9 @@ contextBridge.exposeInMainWorld('petAPI', {
     saveNickname: (nickname: string): Promise<boolean> => ipcRenderer.invoke('pet:nickname-save', nickname),
     onRecall: (listener: (position: { x: number; y: number }) => void) => subscribe('pet:recall', listener),
     onSetActive: (listener: (state: PetState) => void) => subscribe('pet:set-active', listener),
+    notifyChatState: (open: boolean, width?: number, height?: number): void => {
+      ipcRenderer.send('pet:chat-state', { open, width, height })
+    },
     startDrag: (offset: DragOffset): void => {
       ipcRenderer.send('pet:drag-start', offset)
     },

@@ -7,6 +7,7 @@ import type { DragOffset, PetState } from '../../types'
 export class PetWindowManager {
   private readonly windows = new Map<number, PetWindow>()
   private readonly states = new Map<number, PetState>()
+  private readonly chatStates = new Map<number, { open: boolean; width?: number; height?: number }>()
   private activeDisplayId: number | null = null
   private dragTimer: ReturnType<typeof setInterval> | null = null
   private dragDisplayId: number | null = null
@@ -156,13 +157,23 @@ export class PetWindowManager {
     target.moveTop()
   }
 
+  setChatState(displayId: number, open: boolean, width?: number, height?: number): void {
+    this.chatStates.set(displayId, { open, width, height })
+  }
+
   recallAtCursor(): void {
     const cursor = screen.getCursorScreenPoint()
     const display = screen.getDisplayNearestPoint(cursor)
+    const chatState = this.activeDisplayId !== null
+      ? this.chatStates.get(this.activeDisplayId)
+      : undefined
     this.activateDisplay(display.id, {
       x: cursor.x - display.workArea.x,
       y: cursor.y - display.workArea.y,
       recall: true,
+      chatOpen: chatState?.open,
+      chatWidth: chatState?.width,
+      chatHeight: chatState?.height,
     })
   }
 
