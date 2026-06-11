@@ -7,4 +7,10 @@ build/
 dist/
 .claude/
 node_modules/
+
+# Temporary source assets used by install:pet. Keep root assets/*.png tracked.
+assets/*/*.bundle.json
+assets/*/*_source.png
+assets/*/*-pet-assets.json
+assets/*/*_frames_debug.png
 _*/

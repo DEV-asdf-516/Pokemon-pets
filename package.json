@@ -1,6 +1,6 @@
 {
   "name": "pokemon-pet",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Pokemon desktop pet with LLM chat",
   "main": "main.js",
   "scripts": {
@@ -9,6 +9,8 @@
     "start": "npm run build && electron .",
     "generate:icons": "node scripts/generate-icons.js",
     "create:pet": "node scripts/create-pet.js",
+    "install:pet": "node scripts/install-pet-bundle.js",
+    "bundle:pet": "node scripts/bundle-pet.js",
     "validate:pet": "node scripts/validate-pet.js",
     "dist": "npm run build && electron-builder",
     "dist:mac": "npm run build && electron-builder --mac --arm64"
@@ -35,7 +37,7 @@
         "dmg",
         "zip"
       ],
-      "identity": null
+      "identity": "-"
     },
     "win": {
       "icon": "assets/icon.png",

@@ -4,6 +4,33 @@
 
 이 절차는 애플리케이션 코드를 변경하지 않고 새 펫 팩을 만드는 방법입니다.
 
+## 에셋 번들 설치
+
+공식 에셋 번들은 한 명령으로 생성, 검증, 임시 에셋 정리를 수행합니다.
+
+```bash
+unzip lucario-assets.zip -d .
+npm run install:pet -- assets/lucario/lucario.bundle.json --force
+```
+
+옵션:
+
+- `--force`: 기존 `pets/<id>` 폴더를 교체합니다.
+- `--keep-assets`: 임시 `assets/<id>` 폴더를 남깁니다.
+- `--activate`: 설치한 펫을 사용하도록 `config/setting.json`을 변경합니다.
+
+생성 또는 검증에 실패하면 기존 펫 폴더를 복원합니다. 성공 후에는 생성된
+`pets/<id>` 폴더를 커밋하면 됩니다. `assets/<id>` 아래의 임시 번들 원본과
+디버그 파일은 무시되며 기본적으로 자동 삭제됩니다.
+
+번들은 `formatVersion: 1`을 사용하며 완성된 `pet` 설정, `prompt`, 스프라이트
+데이터 또는 생성 설정, 선택적 manifest를 포함하거나 파일로 참조합니다.
+설치된 펫을 휴대 가능한 번들로 내보내려면:
+
+```bash
+npm run bundle:pet -- lucario
+```
+
 ## 1. 팩 생성
 
 소문자 알파벳, 숫자, 하이픈으로 구성된 ID를 사용하세요:

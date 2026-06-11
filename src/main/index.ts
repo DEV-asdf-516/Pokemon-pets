@@ -5,7 +5,7 @@ import path from 'path'
 import fs from 'fs'
 import { PetWindowManager } from './window/pet-window-manager'
 import { createTray } from './tray'
-import { JsonStore } from './services/json-store'
+import { PetScopedStore } from './services/pet-scoped-store'
 import { PetRegistry } from './services/pet-registry'
 import { seedUserPets } from './services/seed-user-pets'
 import { ProviderRegistry } from './ai/provider-registry'
@@ -14,7 +14,7 @@ import { GeminiProvider } from './ai/providers/gemini-provider'
 import { OllamaProvider } from './ai/providers/ollama-provider'
 import { OpenAIProvider } from './ai/providers/openai-provider'
 import { registerIpc } from './ipc/register-ipc'
-import type { ChatMessage, Settings } from '../types'
+import type { ChatMessage, PetProfile, Settings } from '../types'
 
 let windowManager: PetWindowManager | null = null
 let tray: Tray | null = null
@@ -55,13 +55,24 @@ app.whenReady().then(() => {
   }
   const settings = JSON.parse(fs.readFileSync(userSettingPath, 'utf8')) as Settings
 
-  const historyStore = new JsonStore<ChatMessage[]>(
+  const historyStore = new PetScopedStore<ChatMessage[]>(
     path.join(app.getPath('userData'), 'chat_history.json'),
+    settings.pet.active,
     [],
+    (value): value is ChatMessage[] => Array.isArray(value),
+    'riolu',
   )
-  const profileStore = new JsonStore<Record<string, unknown>>(
+  const profileStore = new PetScopedStore<PetProfile>(
     path.join(app.getPath('userData'), 'pet_profile.json'),
+    settings.pet.active,
     {},
+    (value): value is PetProfile => (
+      typeof value === 'object'
+      && value !== null
+      && !Array.isArray(value)
+      && ('nickname' in value || Object.keys(value).length === 0)
+    ),
+    'riolu',
   )
   const userPetsDir = path.join(app.getPath('userData'), 'pets')
   seedUserPets(path.join(rootDir, 'pets'), userPetsDir)

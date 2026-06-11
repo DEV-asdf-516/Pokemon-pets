@@ -1,9 +1,9 @@
 import { clipboard, ipcMain } from 'electron'
 import type { PetWindowManager } from '../window/pet-window-manager'
-import type { JsonStore } from '../services/json-store'
+import type { PetScopedStore } from '../services/pet-scoped-store'
 import type { PetRegistry } from '../services/pet-registry'
 import type { ProviderRegistry } from '../ai/provider-registry'
-import type { ChatMessage, DragOffset, Settings } from '../../types'
+import type { ChatMessage, DragOffset, PetProfile, Settings } from '../../types'
 
 export function registerIpc({
   windowManager,
@@ -14,8 +14,8 @@ export function registerIpc({
   settings,
 }: {
   windowManager: PetWindowManager
-  historyStore: JsonStore<ChatMessage[]>
-  profileStore: JsonStore<Record<string, unknown>>
+  historyStore: PetScopedStore<ChatMessage[]>
+  profileStore: PetScopedStore<PetProfile>
   petRegistry: PetRegistry
   providerRegistry: ProviderRegistry
   settings: Settings

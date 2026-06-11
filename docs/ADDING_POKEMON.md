@@ -4,6 +4,34 @@
 
 This procedure creates a new pet pack without changing application code.
 
+## Install an asset bundle
+
+Official asset bundles generate, validate, and clean temporary source files in
+one command:
+
+```bash
+unzip lucario-assets.zip -d .
+npm run install:pet -- assets/lucario/lucario.bundle.json --force
+```
+
+Options:
+
+- `--force`: replace an existing `pets/<id>` directory.
+- `--keep-assets`: keep the temporary `assets/<id>` directory.
+- `--activate`: set `config/setting.json` to use the installed pet.
+
+The installer restores the previous pet directory when generation or validation
+fails. On success, commit the generated `pets/<id>` directory. Temporary bundle
+sources and debug files under `assets/<id>` are ignored and removed by default.
+
+Bundles use `formatVersion: 1`. They contain or reference a complete `pet`
+definition, `prompt`, sprite data or generation settings, and an optional
+manifest. To export an installed pet as a portable bundle:
+
+```bash
+npm run bundle:pet -- lucario
+```
+
 ## 1. Create the pack
 
 Use a lowercase ID containing letters, numbers, or hyphens:

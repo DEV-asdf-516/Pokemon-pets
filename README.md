@@ -17,7 +17,7 @@ A transparent desktop pet powered by an LLM. Your Pokémon wanders around your s
 - **Drag and drop:** You can drag the pet anywhere on screen.
 - **Summon shortcut:** Press `Ctrl+Shift+R` (or `Cmd+Shift+R` on macOS) from any app to teleport the pet to your cursor.
 - **Nickname:** Click the name in the chat titlebar to set a nickname.
-- **Chat history:** Chat history is saved locally.
+- **Per-pet profiles:** Nicknames and chat history are saved separately for each pet.
 - **Message menu:** Right-click any message to copy, delete, or resend.
 
 ## Download
@@ -32,7 +32,7 @@ Get the latest release from [Releases](https://github.com/DEV-asdf-516/Pokemon-p
 
 ## Development
 
-Requires Node.js 18+ and npm.
+Requires Node.js 20.9+ and npm.
 
 ```bash
 npm install
@@ -63,6 +63,12 @@ How to add a new Pokémon:
 
 [docs/ADDING_POKEMON.md](docs/ADDING_POKEMON.md)
 
+Asset bundles can be installed and validated in one command:
+
+```bash
+npm run install:pet -- assets/lucario/lucario.bundle.json --force
+```
+
 ## Architecture
 
 Runtime boundaries and extension points: [ARCHITECTURE.md](ARCHITECTURE.md)
@@ -76,7 +82,7 @@ npm run dist       # current platform
 
 ## Notes
 
-- Only Riolu is included by default.
+- Riolu and Lucario are included by default.
 - Vibe-coded.
 - The Claude and OpenAI providers have not been thoroughly tested. Please report any issues.
 
