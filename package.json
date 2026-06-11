@@ -4,7 +4,7 @@
   "description": "Pokemon desktop pet with LLM chat",
   "main": "main.js",
   "scripts": {
-    "build": "tsc -p tsconfig.main.json && tsc -p tsconfig.renderer.json && npm run build:copy",
+    "build": "npm run generate:icons && tsc -p tsconfig.main.json && tsc -p tsconfig.renderer.json && npm run build:copy",
     "build:copy": "node -e \"const fs=require('fs'); fs.mkdirSync('build/renderer',{recursive:true}); ['index.html','styles.css'].forEach(f=>fs.copyFileSync('src/renderer/'+f,'build/renderer/'+f))\"",
     "start": "npm run build && electron .",
     "generate:icons": "node scripts/generate-icons.js",
@@ -51,6 +51,7 @@
     "@types/node": "^22.0.0",
     "electron": "^42.3.3",
     "electron-builder": "^26.0.0",
+    "sharp": "^0.35.0",
     "typescript": "^5.8.3"
   },
   "dependencies": {
