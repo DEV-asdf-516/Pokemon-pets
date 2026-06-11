@@ -45,13 +45,59 @@ Ollama is the default and requires no API key. To switch providers, add the rele
 
 On first launch the app copies `config/setting.json` to a user-writable location. If you need an API key (OpenAI / Anthropic / Gemini), also place a `.env` file in the same folder.
 
-| Platform | Folder |
-|---|---|
-| macOS | `~/Library/Application Support/Pokemon Pet/` |
-| Windows | `%APPDATA%\Pokemon Pet\` |
-| Linux | `~/.config/Pokemon Pet/` |
-
 Files: `setting.json` (provider/model config), `.env` (API keys, optional), `pets/` (editable pet packs)
+
+During development (`npm start`), Electron creates the `pokemon-pet` user-data folder from the app name. A packaged or installed app may use a folder based on its display name depending on the environment.
+
+### macOS
+
+User-data folder: `~/Library/Application Support/pokemon-pet/`
+
+Locate the settings file:
+
+```bash
+find "$HOME/Library/Application Support" -maxdepth 3 -name setting.json 2>/dev/null | grep -Ei "pokemon|pet"
+```
+
+Reveal the development settings file in Finder:
+
+```bash
+open -R "$HOME/Library/Application Support/pokemon-pet/setting.json"
+```
+
+### Windows
+
+User-data folder: `%APPDATA%\pokemon-pet\`
+
+Locate the settings file in PowerShell:
+
+```powershell
+Get-ChildItem "$env:APPDATA" -Filter setting.json -Recurse -ErrorAction SilentlyContinue |
+  Where-Object { $_.FullName -match "pokemon|pet" } |
+  Select-Object -ExpandProperty FullName
+```
+
+Open the development settings file:
+
+```powershell
+notepad "$env:APPDATA\pokemon-pet\setting.json"
+```
+
+### Linux
+
+User-data folder: `~/.config/pokemon-pet/`
+
+Locate the settings file:
+
+```bash
+find "${XDG_CONFIG_HOME:-$HOME/.config}" -maxdepth 3 -name setting.json 2>/dev/null | grep -Ei "pokemon|pet"
+```
+
+Open the development settings file with the default application:
+
+```bash
+xdg-open "${XDG_CONFIG_HOME:-$HOME/.config}/pokemon-pet/setting.json"
+```
 
 Bundled pet packs are copied into `pets/` when missing. Existing user copies are never overwritten, so prompts, sprites, behavior, and themes can be edited directly.
 

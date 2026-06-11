@@ -45,13 +45,59 @@ npm start
 
 첫 실행 시 `config/setting.json`이 아래 폴더로 복사됩니다. API 키가 필요한 경우(OpenAI / Anthropic / Gemini) `.env` 파일도 같은 폴더에 넣으면 됩니다.
 
-| 플랫폼 | 폴더 |
-|---|---|
-| macOS | `~/Library/Application Support/Pokemon Pet/` |
-| Windows | `%APPDATA%\Pokemon Pet\` |
-| Linux | `~/.config/Pokemon Pet/` |
-
 파일: `setting.json` (프로바이더/모델 설정), `.env` (API 키, 선택 사항), `pets/` (수정 가능한 펫 팩)
+
+개발 실행(`npm start`)에서는 Electron의 앱 이름을 기준으로 사용자 데이터 폴더가 `pokemon-pet`으로 생성됩니다. 앱을 패키징하거나 설치한 경우에는 환경에 따라 표시 이름 기반의 폴더를 사용할 수 있습니다.
+
+### macOS
+
+사용자 데이터 폴더: `~/Library/Application Support/pokemon-pet/`
+
+설정 파일을 찾으려면:
+
+```bash
+find "$HOME/Library/Application Support" -maxdepth 3 -name setting.json 2>/dev/null | grep -Ei "pokemon|pet"
+```
+
+개발용 설정 파일을 Finder에서 열려면:
+
+```bash
+open -R "$HOME/Library/Application Support/pokemon-pet/setting.json"
+```
+
+### Windows
+
+사용자 데이터 폴더: `%APPDATA%\pokemon-pet\`
+
+PowerShell에서 설정 파일을 찾으려면:
+
+```powershell
+Get-ChildItem "$env:APPDATA" -Filter setting.json -Recurse -ErrorAction SilentlyContinue |
+  Where-Object { $_.FullName -match "pokemon|pet" } |
+  Select-Object -ExpandProperty FullName
+```
+
+개발용 설정 파일을 열려면:
+
+```powershell
+notepad "$env:APPDATA\pokemon-pet\setting.json"
+```
+
+### Linux
+
+사용자 데이터 폴더: `~/.config/pokemon-pet/`
+
+설정 파일을 찾으려면:
+
+```bash
+find "${XDG_CONFIG_HOME:-$HOME/.config}" -maxdepth 3 -name setting.json 2>/dev/null | grep -Ei "pokemon|pet"
+```
+
+개발용 설정 파일을 기본 애플리케이션으로 열려면:
+
+```bash
+xdg-open "${XDG_CONFIG_HOME:-$HOME/.config}/pokemon-pet/setting.json"
+```
 
 기본 펫 팩은 사용자 `pets/` 폴더에 없을 때만 복사됩니다. 기존 사용자 파일은 덮어쓰지 않으므로 프롬프트, 스프라이트, 동작, 테마를 직접 수정할 수 있습니다.
 
