@@ -75,6 +75,9 @@ Important fields:
 - `promptFile`: character prompt file relative to the pet folder.
 - `spritesFile`: sprite map relative to the pet folder.
 - `cryUrl`: optional HTTPS audio URL; use an empty string for no sound.
+- `recallText`: speech bubble shown when the pet is recalled from the shortcut or tray.
+- `responseCryKeywords`: strings that trigger the cry when present in an AI response; use an empty array to disable.
+- `theme`: chat accent, hover, glow, and assistant-message colors.
 - `appearance`: movement bounds and rendered image size.
 - `movement`: speed, jump, animation, and idle-talk timing.
 - `idlePhrases`: random speech-bubble messages.
@@ -103,7 +106,12 @@ Fix every reported error before selecting the pet.
 
 ## 6. Select the pet
 
-Edit `config/setting.json`:
+For a packaged app, place the completed pet folder under the user-data `pets/`
+folder documented in the README. During development, `npm run create:pet`
+creates the source pack under the project `pets/` folder.
+
+Edit the user-data `setting.json` for a packaged app, or `config/setting.json`
+when preparing the bundled development default:
 
 ```json
 {

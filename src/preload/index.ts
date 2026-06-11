@@ -45,6 +45,10 @@ contextBridge.exposeInMainWorld('petAPI', {
     load: (): Promise<Settings> => ipcRenderer.invoke('settings:load'),
   },
   chat: {
+    setPending: (pending: boolean): void => {
+      ipcRenderer.send('chat:pending', pending)
+    },
+    onPendingChanged: (listener: (payload: { pending: boolean }) => void) => subscribe('chat:pending-changed', listener),
     stream: (payload: {
       requestId: string
       provider: string

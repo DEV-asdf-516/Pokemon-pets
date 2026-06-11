@@ -1,10 +1,13 @@
 import { app, globalShortcut, screen } from 'electron'
+import type { Tray } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import path from 'path'
 import fs from 'fs'
 import { PetWindowManager } from './window/pet-window-manager'
+import { createTray } from './tray'
 import { JsonStore } from './services/json-store'
 import { PetRegistry } from './services/pet-registry'
+import { seedUserPets } from './services/seed-user-pets'
 import { ProviderRegistry } from './ai/provider-registry'
 import { AnthropicProvider } from './ai/providers/anthropic-provider'
 import { GeminiProvider } from './ai/providers/gemini-provider'
@@ -14,6 +17,7 @@ import { registerIpc } from './ipc/register-ipc'
 import type { ChatMessage, Settings } from '../types'
 
 let windowManager: PetWindowManager | null = null
+let tray: Tray | null = null
 
 function loadEnvironment(rootDir: string): void {
   const loadEnvFile = (process as unknown as { loadEnvFile?: (p: string) => void }).loadEnvFile
@@ -59,7 +63,9 @@ app.whenReady().then(() => {
     path.join(app.getPath('userData'), 'pet_profile.json'),
     {},
   )
-  const petRegistry = new PetRegistry(path.join(rootDir, 'pets'))
+  const userPetsDir = path.join(app.getPath('userData'), 'pets')
+  seedUserPets(path.join(rootDir, 'pets'), userPetsDir)
+  const petRegistry = new PetRegistry(userPetsDir)
   const providerRegistry = new ProviderRegistry()
 
   providerRegistry.register(new OllamaProvider(settings.ai.ollama))
@@ -75,6 +81,7 @@ app.whenReady().then(() => {
     path.join(rootDir, 'build/preload/index.js'),
   )
   windowManager.createAll()
+  tray = createTray(rootDir, windowManager)
 
   registerIpc({
     windowManager,
@@ -105,6 +112,8 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => app.quit())
 app.on('will-quit', () => {
+  tray?.destroy()
+  tray = null
   globalShortcut.unregisterAll()
   if (windowManager) {
     windowManager.destroyAll()

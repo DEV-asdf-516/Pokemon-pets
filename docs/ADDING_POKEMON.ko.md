@@ -73,6 +73,9 @@ pets/pikachu/sprites/
 - `promptFile`: 펫 폴더 기준 캐릭터 프롬프트 파일 경로.
 - `spritesFile`: 펫 폴더 기준 스프라이트 맵 경로.
 - `cryUrl`: 선택적 HTTPS 오디오 URL; 소리 없음은 빈 문자열.
+- `recallText`: 단축키나 Tray 메뉴로 소환할 때 표시할 말풍선.
+- `responseCryKeywords`: AI 응답에 포함되면 울음소리를 재생할 문자열 목록. 빈 배열이면 자동 재생하지 않음.
+- `theme`: 채팅창 강조색, hover 색상, 응답 말풍선 색상.
 - `appearance`: 이동 범위 및 렌더링 이미지 크기.
 - `movement`: 속도, 점프, 애니메이션, 유휴 말풍선 타이밍.
 - `idlePhrases`: 랜덤 말풍선 메시지 목록.
@@ -99,7 +102,12 @@ npm run validate:pet -- pikachu
 
 ## 6. 펫 선택
 
-`config/setting.json` 수정:
+패키징된 앱에서는 완성한 펫 폴더를 README에 안내된 사용자 데이터
+`pets/` 폴더에 넣으세요. 개발 중 `npm run create:pet` 명령은 프로젝트
+`pets/` 폴더에 소스 팩을 생성합니다.
+
+패키징된 앱은 사용자 데이터의 `setting.json`을 수정하고, 번들 기본값을
+준비할 때는 `config/setting.json`을 수정하세요.
 
 ```json
 {

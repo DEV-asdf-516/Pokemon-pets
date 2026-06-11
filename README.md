@@ -51,7 +51,9 @@ On first launch the app copies `config/setting.json` to a user-writable location
 | Windows | `%APPDATA%\Pokemon Pet\` |
 | Linux | `~/.config/Pokemon Pet/` |
 
-Files: `setting.json` (provider/model config), `.env` (API keys, optional)
+Files: `setting.json` (provider/model config), `.env` (API keys, optional), `pets/` (editable pet packs)
+
+Bundled pet packs are copied into `pets/` when missing. Existing user copies are never overwritten, so prompts, sprites, behavior, and themes can be edited directly.
 
 Full configuration reference: [docs/AI_PROVIDERS.md](docs/AI_PROVIDERS.md)
 

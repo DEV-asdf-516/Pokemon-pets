@@ -51,7 +51,9 @@ npm start
 | Windows | `%APPDATA%\Pokemon Pet\` |
 | Linux | `~/.config/Pokemon Pet/` |
 
-파일: `setting.json` (프로바이더/모델 설정), `.env` (API 키, 선택 사항)
+파일: `setting.json` (프로바이더/모델 설정), `.env` (API 키, 선택 사항), `pets/` (수정 가능한 펫 팩)
+
+기본 펫 팩은 사용자 `pets/` 폴더에 없을 때만 복사됩니다. 기존 사용자 파일은 덮어쓰지 않으므로 프롬프트, 스프라이트, 동작, 테마를 직접 수정할 수 있습니다.
 
 전체 설정 가이드: [docs/AI_PROVIDERS.ko.md](docs/AI_PROVIDERS.ko.md)
 

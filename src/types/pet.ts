@@ -19,6 +19,14 @@ export interface PetMovement {
   idleTalkMaxMs: number
 }
 
+export interface PetTheme {
+  accentColor: string
+  accentHoverColor: string
+  accentGlowColor: string
+  assistantBackground: string
+  assistantBorderColor: string
+}
+
 export interface PetDefinition {
   id: string
   name: string
@@ -28,7 +36,10 @@ export interface PetDefinition {
   cryUrl: string
   appearance: PetAppearance
   movement: PetMovement
+  theme: PetTheme
   idlePhrases: string[]
+  recallText: string
+  responseCryKeywords: string[]
   greeting: string
   thinkingText: string
   fallbackText: string

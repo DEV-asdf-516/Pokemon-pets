@@ -7,6 +7,7 @@
     "build": "tsc -p tsconfig.main.json && tsc -p tsconfig.renderer.json && npm run build:copy",
     "build:copy": "node -e \"const fs=require('fs'); fs.mkdirSync('build/renderer',{recursive:true}); ['index.html','styles.css'].forEach(f=>fs.copyFileSync('src/renderer/'+f,'build/renderer/'+f))\"",
     "start": "npm run build && electron .",
+    "generate:icons": "node scripts/generate-icons.js",
     "create:pet": "node scripts/create-pet.js",
     "validate:pet": "node scripts/validate-pet.js",
     "dist": "npm run build && electron-builder",
@@ -18,6 +19,7 @@
     "files": [
       "main.js",
       "build/**/*",
+      "assets/*.png",
       "pets/**/*",
       "config/**/*",
       "!.env",
@@ -28,6 +30,7 @@
       "provider": "github"
     },
     "mac": {
+      "icon": "assets/icon.png",
       "target": [
         "dmg",
         "zip"
@@ -35,9 +38,11 @@
       "identity": null
     },
     "win": {
+      "icon": "assets/icon.png",
       "target": "nsis"
     },
     "linux": {
+      "icon": "assets/icon.png",
       "target": "AppImage"
     }
   },

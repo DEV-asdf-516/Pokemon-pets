@@ -23,8 +23,35 @@ function readJson(fileName) {
 const definition = readJson('pet.json')
 if (definition) {
   if (definition.id !== petId) errors.push(`pet.json id must be "${petId}"`)
-  for (const key of ['name', 'promptFile', 'spritesFile', 'appearance', 'movement']) {
+  for (const key of [
+    'name',
+    'promptFile',
+    'spritesFile',
+    'appearance',
+    'movement',
+    'theme',
+    'recallText',
+    'responseCryKeywords',
+  ]) {
     if (!definition[key]) errors.push(`pet.json is missing "${key}"`)
+  }
+  if (!Array.isArray(definition.responseCryKeywords)) {
+    errors.push('pet.json "responseCryKeywords" must be an array')
+  } else if (definition.responseCryKeywords.some((keyword) => typeof keyword !== 'string')) {
+    errors.push('pet.json "responseCryKeywords" must contain only strings')
+  }
+  if (definition.theme) {
+    for (const key of [
+      'accentColor',
+      'accentHoverColor',
+      'accentGlowColor',
+      'assistantBackground',
+      'assistantBorderColor',
+    ]) {
+      if (typeof definition.theme[key] !== 'string' || !definition.theme[key]) {
+        errors.push(`pet.json theme is missing "${key}"`)
+      }
+    }
   }
 
   if (definition.promptFile && !fs.existsSync(path.join(petDir, definition.promptFile))) {

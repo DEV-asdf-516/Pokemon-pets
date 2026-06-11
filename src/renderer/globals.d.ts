@@ -35,6 +35,8 @@ interface PetAPI {
     load(): Promise<Settings>
   }
   chat: {
+    setPending(pending: boolean): void
+    onPendingChanged(listener: (payload: { pending: boolean }) => void): () => void
     stream(payload: StreamPayload): void
     onChunk(listener: (payload: { requestId: string; chunk: string }) => void): () => void
     onDone(listener: (payload: { requestId: string }) => void): () => void

@@ -24,6 +24,8 @@ fs.writeFileSync(path.join(petDir, 'pet.json'), JSON.stringify({
   spritesFile: 'sprites.json',
   spritesManifestFile: 'sprites-manifest.json',
   cryUrl: '',
+  recallText: `${name}!`,
+  responseCryKeywords: [name],
   greeting: `${name}! 반가워!`,
   thinkingText: `${name}가 생각하는 중`,
   fallbackText: '...?',
@@ -42,6 +44,13 @@ fs.writeFileSync(path.join(petDir, 'pet.json'), JSON.stringify({
     idleFrameInterval: 6,
     idleTalkMinMs: 180000,
     idleTalkMaxMs: 600000,
+  },
+  theme: {
+    accentColor: '#4a90d9',
+    accentHoverColor: '#357abd',
+    accentGlowColor: 'rgba(74, 144, 217, 0.7)',
+    assistantBackground: '#e8f4fd',
+    assistantBorderColor: '#c5e0f5',
   },
   idlePhrases: [`${name}!`],
 }, null, 2) + '\n')

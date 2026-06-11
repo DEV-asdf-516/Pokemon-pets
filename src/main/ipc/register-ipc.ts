@@ -62,6 +62,10 @@ export function registerIpc({
   })
   ipcMain.handle('settings:load', () => settings)
 
+  ipcMain.on('chat:pending', (event, pending: boolean) => {
+    windowManager.broadcastExcept('chat:pending-changed', { pending: Boolean(pending) }, event.sender)
+  })
+
   ipcMain.on('chat:stream', async (event, payload: {
     requestId: string
     provider: string

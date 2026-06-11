@@ -2,6 +2,7 @@ import type { ChatMessage } from '../../types/index.js'
 
 interface MessageListOptions {
   container: HTMLElement
+  petId: string
   menu: HTMLElement
   copyButton: HTMLElement
   deleteButton: HTMLElement
@@ -32,10 +33,13 @@ export class MessageList {
     })
   }
 
-  add(role: string, text: string, entry: ChatMessage | null = null): HTMLElement {
+  add(role: ChatMessage['role'], text: string, entry: ChatMessage | null = null): HTMLElement {
     const element = document.createElement('div')
     element.className = `msg ${role}`
     element.textContent = text
+    if (role === 'assistant') {
+      element.dataset.petId = this.opts.petId
+    }
     if (entry) {
       this.bind(element, entry)
     }

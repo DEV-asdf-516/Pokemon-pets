@@ -1,23 +1,28 @@
-import { MessageList } from './components/message-list.js'
-import type { ChatMessage, PetDefinition, Settings } from '../types/index.js'
+import { ChatController } from './controllers/chat-controller.js'
+import type { PetDefinition, Settings } from '../types/index.js'
 
 async function bootstrap(): Promise<void> {
-const petDefinition: PetDefinition = await window.petAPI.pet.loadActive()
-const petProfile = await window.petAPI.pet.loadProfile()
-const settings: Settings = await window.petAPI.settings.load()
-const petSprites = petDefinition.sprites
-const CRY_URL = petDefinition.cryUrl
-const IDLE_PHRASES = petDefinition.idlePhrases
-const DEFAULT_SYSTEM_PROMPT = petDefinition.prompt
+  const petDefinition: PetDefinition = await window.petAPI.pet.loadActive()
+  const petProfile = await window.petAPI.pet.loadProfile()
+  const settings: Settings = await window.petAPI.settings.load()
+  const petSprites = petDefinition.sprites
+  const CRY_URL = petDefinition.cryUrl
+  const IDLE_PHRASES = petDefinition.idlePhrases
 
 const petName = document.getElementById('pet-name')!
 const petNameInput = document.getElementById('pet-name-input') as HTMLInputElement
 let currentNickname = petProfile.nickname ?? petDefinition.name
 petName.textContent = `🐾 ${currentNickname}`
-const rioluEl = document.getElementById('riolu') as HTMLImageElement
-rioluEl.alt = petDefinition.name
-rioluEl.style.width = `${petDefinition.appearance.imageWidth}px`
-rioluEl.style.height = `${petDefinition.appearance.imageHeight}px`
+const petImage = document.getElementById('pet-image') as HTMLImageElement
+petImage.alt = petDefinition.name
+petImage.style.width = `${petDefinition.appearance.imageWidth}px`
+petImage.style.height = `${petDefinition.appearance.imageHeight}px`
+petNameInput.setAttribute('aria-label', `${petDefinition.name} 닉네임`)
+document.documentElement.style.setProperty('--pet-accent', petDefinition.theme.accentColor)
+document.documentElement.style.setProperty('--pet-accent-hover', petDefinition.theme.accentHoverColor)
+document.documentElement.style.setProperty('--pet-accent-glow', petDefinition.theme.accentGlowColor)
+document.documentElement.style.setProperty('--pet-assistant-bg', petDefinition.theme.assistantBackground)
+document.documentElement.style.setProperty('--pet-assistant-border', petDefinition.theme.assistantBorderColor)
 
 function startNicknameEdit(event: Event): void {
   event.stopPropagation()
@@ -57,8 +62,6 @@ petNameInput.addEventListener('keydown', (event) => {
 })
 
 // ── 스프라이트 ────────────────────────────────────
-const rioluImg = document.getElementById('riolu') as HTMLImageElement
-
 function getSpriteKey(dir: string): string {
   if (dir === 'up') {
     return 'back_up'
@@ -83,7 +86,7 @@ function updateSpriteTransform(action: string, dir: string, idx: number): void {
   const flip = isLeft ? 'scaleX(-1)' : 'scaleX(1)'
   const walkBob = action === 'walk' && idx % 2 === 1 ? -2 : 0
   const jumpBob = jumpTick > 0 ? -Math.sin((JUMP_DURATION - jumpTick) / JUMP_DURATION * Math.PI) * JUMP_HEIGHT : 0
-  rioluImg.style.transform = `${flip} translateY(${Math.round(walkBob + jumpBob)}px)`
+  petImage.style.transform = `${flip} translateY(${Math.round(walkBob + jumpBob)}px)`
 }
 
 function setFrame(action: string, dir: string, idx: number): void {
@@ -92,13 +95,12 @@ function setFrame(action: string, dir: string, idx: number): void {
   if (!frames || !frames.length) {
     return
   }
-  rioluImg.src = frames[idx % frames.length]
+  petImage.src = frames[idx % frames.length]
   updateSpriteTransform(action, dir, idx)
 }
 
 // ── 상태 ─────────────────────────────────────────
 const launchParams = new URLSearchParams(window.location.search)
-const chatHistory: ChatMessage[] = []
 let chatOpen = false
 let mouseEventsIgnored = true
 let isPetActive = launchParams.get('active') !== 'false'
@@ -208,7 +210,7 @@ window.petAPI.pet.onRecall((position) => {
     ? Math.max(0, Math.min(window.innerHeight - PET_HEIGHT, position.y - PET_HEIGHT))
     : spawnPos.y
   applyPetPosition()
-  showBubble('리오!', 1500)
+  showBubble(petDefinition.recallText, 1500)
 })
 
 window.petAPI.pet.onSetActive((state) => {
@@ -244,7 +246,7 @@ window.petAPI.pet.onSetActive((state) => {
     startWalk()
   }
   if (state.recall) {
-    showBubble('리오!', 1500)
+    showBubble(petDefinition.recallText, 1500)
   }
   if (typeof state.chatOpen === 'boolean') {
     chatOpen = state.chatOpen
@@ -257,16 +259,7 @@ window.petAPI.pet.onSetActive((state) => {
         chatWindow.style.height = `${state.chatHeight}px`
       }
       updateChatPos()
-      if (messages.childElementCount === 0) {
-        void (async () => {
-          if (chatHistory.length === 0) {
-            await loadHistory()
-          }
-          if (chatHistory.length > 0) {
-            renderHistory(chatHistory)
-          }
-        })()
-      }
+      void chatController.syncVisibleHistory()
     }
   }
 })
@@ -404,6 +397,9 @@ function stopWalk(): void {
 
 // ── 울음소리 ──────────────────────────────────────
 function playCry(): void {
+  if (!CRY_URL) {
+    return
+  }
   new Audio(CRY_URL).play().catch(() => {})
 }
 
@@ -447,22 +443,19 @@ const chatWindow = document.getElementById('chat-window')!
 const messages = document.getElementById('messages')!
 const userInput = document.getElementById('user-input') as HTMLInputElement
 const messageMenu = document.getElementById('message-menu')!
-const messageList = new MessageList({
-  container: messages,
-  menu: messageMenu,
+const chatController = new ChatController({
+  chatWindow,
+  messages,
+  userInput,
+  messageMenu,
   copyButton: document.getElementById('copy-message')!,
   deleteButton: document.getElementById('delete-message')!,
   resendButton: document.getElementById('resend-message')!,
-  menuBounds: chatWindow,
-  onDelete: async (entry) => {
-    const index = chatHistory.indexOf(entry)
-    if (index !== -1) {
-      chatHistory.splice(index, 1)
-    }
-    await window.petAPI.history.save(chatHistory)
-  },
-  onCopy: (text) => window.petAPI.clipboard.writeText(text),
-  onResend: async (entry) => sendMessage(entry.content),
+  sendButton: document.getElementById('send-btn')!,
+  petDefinition,
+  settings,
+  isOpen: () => chatOpen,
+  playCry,
 })
 
 function isPointInRect(x: number, y: number, rect: DOMRect): boolean {
@@ -479,7 +472,7 @@ function isPointOnInteractiveArea(x: number, y: number): boolean {
 }
 
 function syncMouseIgnore(x: number, y: number): void {
-  if (isDragging || chatDragging || rzActive || messageMenu.style.display !== 'none') {
+  if (isDragging || chatDragging || rzActive || chatController.isMenuOpen()) {
     setMouseIgnore(false)
     return
   }
@@ -516,194 +509,6 @@ function updateChatPos(): void {
   chatWindow.style.top = `${top}px`
   chatWindow.style.right = 'auto'
   chatWindow.style.bottom = 'auto'
-}
-
-function addMessage(role: string, text: string, entry: ChatMessage | null = null): HTMLElement {
-  return messageList.add(role, text, entry)
-}
-
-function hideMessageMenu(): void {
-  messageList.hideMenu()
-}
-
-function isReasoningLeak(text: string): boolean {
-  if (typeof text !== 'string') {
-    return false
-  }
-  const normalized = text.trim().toLowerCase()
-  if (normalized.startsWith('<think>')) {
-    return true
-  }
-  const prefixes = ['okay', 'let me', 'the user', 'we need', 'i need', 'i should', 'we should']
-  return prefixes.some((prefix) => prefix.startsWith(normalized) || normalized.startsWith(prefix))
-}
-
-function cleanAssistantText(text: string): string {
-  const clean = text
-    .replace(/<think>[\s\S]*?<\/think>/g, '')
-    .replace(/<think>[\s\S]*$/g, '')
-    .trim()
-  return isReasoningLeak(clean) ? '' : clean
-}
-
-function sanitizeHistory(history: ChatMessage[] | undefined): ChatMessage[] {
-  const cleanHistory: ChatMessage[] = []
-  for (const msg of history ?? []) {
-    if (!msg || typeof msg.content !== 'string') {
-      continue
-    }
-    if (msg.role !== 'user' && msg.role !== 'assistant') {
-      continue
-    }
-    if (msg.role === 'assistant' && isReasoningLeak(msg.content)) {
-      if (cleanHistory.at(-1)?.role === 'user') {
-        cleanHistory.pop()
-      }
-      continue
-    }
-    cleanHistory.push(msg)
-  }
-  return cleanHistory
-}
-
-function renderHistory(history: ChatMessage[]): void {
-  messageList.clear()
-  history.forEach((msg) => {
-    addMessage(msg.role === 'assistant' ? 'riolu' : 'user', msg.content, msg)
-  })
-}
-
-function replaceHistory(history: ChatMessage[], { rerender = true } = {}): void {
-  chatHistory.splice(0, chatHistory.length, ...history)
-  if (rerender && chatOpen) {
-    renderHistory(chatHistory)
-  }
-}
-
-async function loadHistory(): Promise<void> {
-  const saved = await window.petAPI.history.load()
-  const cleanHistory = sanitizeHistory(saved)
-  replaceHistory(cleanHistory)
-  if (saved?.length !== cleanHistory.length) {
-    await window.petAPI.history.save(cleanHistory)
-  }
-}
-
-window.petAPI.history.onUpdated((payload) => {
-  const cleanHistory = sanitizeHistory(payload?.history)
-  replaceHistory(cleanHistory)
-})
-
-let isSending = false
-let thinkingTimer: ReturnType<typeof setInterval> | null = null
-
-function startThinkingAnimation(element: HTMLElement): void {
-  let dots = 0
-  element.classList.add('thinking')
-  element.textContent = petDefinition.thinkingText
-  thinkingTimer = setInterval(() => {
-    dots = (dots + 1) % 4
-    element.textContent = petDefinition.thinkingText + '.'.repeat(dots)
-  }, 350)
-}
-
-function stopThinkingAnimation(element: HTMLElement): void {
-  if (thinkingTimer) {
-    clearInterval(thinkingTimer)
-  }
-  thinkingTimer = null
-  element.classList.remove('thinking')
-}
-
-async function sendMessage(text: string): Promise<void> {
-  if (!text.trim() || isSending) {
-    return
-  }
-  isSending = true
-  hideMessageMenu()
-  const userEntry: ChatMessage = { role: 'user', content: text }
-  chatHistory.push(userEntry)
-  addMessage('user', text, userEntry)
-  userInput.value = ''
-  await window.petAPI.history.save(chatHistory)
-
-  const rioluMessage = addMessage('riolu', '')
-  const requestMessages: ChatMessage[] = [{ role: 'system', content: DEFAULT_SYSTEM_PROMPT }, ...chatHistory]
-  startThinkingAnimation(rioluMessage)
-  const result = await streamAssistantAttempt(rioluMessage, requestMessages)
-  stopThinkingAnimation(rioluMessage)
-
-  if (!result.ok) {
-    rioluMessage.textContent = petDefinition.errorText
-    isSending = false
-    return
-  }
-
-  const clean = cleanAssistantText(result.content)
-  rioluMessage.textContent = clean || petDefinition.fallbackText
-  const assistantEntry: ChatMessage = { role: 'assistant', content: rioluMessage.textContent! }
-  chatHistory.push(assistantEntry)
-  messageList.bind(rioluMessage, assistantEntry)
-  if (/리오|파동|반가|안녕|신남|좋아|같이/.test(rioluMessage.textContent!)) {
-    playCry()
-  }
-  await window.petAPI.history.save(chatHistory)
-  isSending = false
-}
-
-function streamAssistantAttempt(
-  rioluMessage: HTMLElement,
-  requestMessages: ChatMessage[],
-): Promise<{ ok: true; content: string } | { ok: false; error: string }> {
-  return new Promise((resolve) => {
-    const requestId = Date.now() + '-' + Math.random().toString(16).slice(2)
-    let rawContent = ''
-    let hasVisibleText = false
-    const cleanup = (): void => {
-      unsubscribeChunk()
-      unsubscribeDone()
-      unsubscribeError()
-    }
-    const unsubscribeChunk = window.petAPI.chat.onChunk((payload) => {
-      if (!payload || payload.requestId !== requestId) {
-        return
-      }
-      rawContent += payload.chunk || ''
-      const clean = cleanAssistantText(rawContent)
-      if (!clean) {
-        return
-      }
-      if (!hasVisibleText) {
-        stopThinkingAnimation(rioluMessage)
-        hasVisibleText = true
-      }
-      rioluMessage.textContent = clean
-      messageList.scrollToBottom()
-    })
-    const unsubscribeDone = window.petAPI.chat.onDone((payload) => {
-      if (!payload || payload.requestId !== requestId) {
-        return
-      }
-      cleanup()
-      resolve({ ok: true, content: rawContent })
-    })
-    const unsubscribeError = window.petAPI.chat.onError((payload) => {
-      if (!payload || payload.requestId !== requestId) {
-        return
-      }
-      cleanup()
-      resolve({ ok: false, error: payload.error })
-    })
-    type ProviderKey = 'ollama' | 'openai' | 'anthropic' | 'gemini'
-    const providerKey = settings.ai.provider as ProviderKey
-    const model = (settings.ai[providerKey] as { model: string }).model
-    window.petAPI.chat.stream({
-      requestId,
-      provider: settings.ai.provider,
-      model,
-      messages: requestMessages,
-    })
-  })
 }
 
 // ── 채팅창 드래그 이동 ────────────────────────────
@@ -786,7 +591,7 @@ document.addEventListener('mousemove', (e) => {
     syncMouseIgnore(e.clientX, e.clientY)
   }
 
-  // 채팅창 드래그 이동: 채팅창과 리오르를 한 묶음으로 이동한다.
+  // 채팅창과 펫을 한 묶음으로 이동한다.
   if (chatDragging) {
     const dx = Math.max(groupMinDX, Math.min(groupMaxDX, e.clientX - chatDragStartX))
     const dy = Math.max(groupMinDY, Math.min(groupMaxDY, e.clientY - chatDragStartY))
@@ -873,7 +678,7 @@ document.addEventListener('mouseleave', () => {
   }
 })
 
-// ── 리오르 드래그 ─────────────────────────────────
+// ── 펫 드래그 ─────────────────────────────────────
 petContainer.addEventListener('mousedown', (e) => {
   isDragging = true
   petDragStarted = true
@@ -895,7 +700,7 @@ petContainer.addEventListener('mousedown', (e) => {
 })
 
 // ── 클릭 ─────────────────────────────────────────
-rioluImg.addEventListener('click', async (event) => {
+petImage.addEventListener('click', async (event) => {
   if (!clickThreshold) {
     return
   }
@@ -916,50 +721,26 @@ rioluImg.addEventListener('click', async (event) => {
   syncMouseIgnore(event.clientX, event.clientY)
   const openRect = chatWindow.getBoundingClientRect()
   window.petAPI.pet.notifyChatState(true, openRect.width, openRect.height)
-  if (messages.childElementCount === 0 && chatHistory.length > 0) {
-    renderHistory(chatHistory)
-  }
-  if (chatHistory.length > 0) {
-    return
-  }
-  await loadHistory()
-  if (chatHistory.length > 0) {
-    return
-  }
-  setTimeout(() => {
-    const greeting: ChatMessage = { role: 'assistant', content: petDefinition.greeting }
-    chatHistory.push(greeting)
-    addMessage('riolu', greeting.content, greeting)
-  }, 300)
+  await chatController.onChatOpened()
 })
 
 document.getElementById('close-chat')!.addEventListener('click', () => {
-  hideMessageMenu()
+  chatController.hideMenu()
   chatOpen = false
   chatWindow.style.display = 'none'
   window.petAPI.pet.notifyChatState(false)
   startWalk()
   setMouseIgnore(true)
 })
-
-document.getElementById('send-btn')!.addEventListener('click', () => {
-  void sendMessage(userInput.value)
-})
-userInput.addEventListener('keyup', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault()
-    void sendMessage(userInput.value)
-  }
-})
 }
 
 bootstrap().catch((error: unknown) => {
   console.error('Failed to start pet renderer', error)
-  const riolu = document.getElementById('riolu') as HTMLImageElement
-  riolu.alt = '리오르 로딩 실패'
-  riolu.style.display = 'none'
+  const petImage = document.getElementById('pet-image') as HTMLImageElement
+  petImage.alt = '펫 로딩 실패'
+  petImage.style.display = 'none'
   const container = document.getElementById('pet-container')!
-  container.textContent = '리오르 로딩 실패'
+  container.textContent = '펫 로딩 실패'
   container.style.padding = '8px'
   container.style.color = '#d33'
   container.style.background = 'white'
