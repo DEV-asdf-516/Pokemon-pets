@@ -20,6 +20,14 @@ A transparent desktop pet powered by an LLM. Your Pokémon wanders around your s
 - **Per-pet profiles:** Nicknames and chat history are saved separately for each pet.
 - **Message menu:** Right-click any message to copy, delete, or resend.
 
+## Included Pokemon
+
+| Pokemon | Pet ID | Development launch |
+|---|---|---|
+| 리오르 (Riolu) | `riolu` | `npm start -- riolu` |
+| 루카리오 (Lucario) | `lucario` | `npm start -- lucario` |
+| 토오 (Clodsire) | `clodsire` | `npm start -- clodsire` |
+
 ## Download
 
 Get the latest release from [Releases](https://github.com/DEV-asdf-516/Pokemon-pets/releases/latest).
@@ -38,6 +46,16 @@ Requires Node.js 20.9+ and npm.
 npm install
 npm start
 ```
+
+To launch a specific Pokemon in development mode, pass its pet ID after `--`:
+
+```bash
+npm start -- lucario
+npm start -- clodsire
+npm start -- --clodsire
+```
+
+If the app is already running, quit it before starting with a different pet.
 
 ## AI provider
 
@@ -128,7 +146,6 @@ npm run dist       # current platform
 
 ## Notes
 
-- Riolu and Lucario are included by default.
 - Vibe-coded.
 - The Claude and OpenAI providers have not been thoroughly tested. Please report any issues.
 

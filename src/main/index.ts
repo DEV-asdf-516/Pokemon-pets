@@ -19,6 +19,33 @@ import type { ChatMessage, PetProfile, Settings } from '../types'
 let windowManager: PetWindowManager | null = null
 let tray: Tray | null = null
 
+function resolveDevelopmentPetId(userPetsDir: string): string | null {
+  if (app.isPackaged) {
+    return null
+  }
+
+  const petIds = fs
+    .readdirSync(userPetsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+  const petIdSet = new Set(petIds)
+  const args = process.argv.slice(2)
+  const petArg = args.find((arg) => petIdSet.has(arg))
+    ?? args.find((arg) => arg.startsWith('--pet='))?.slice('--pet='.length)
+    ?? args.find((arg) => arg.startsWith('--') && petIdSet.has(arg.slice(2)))?.slice(2)
+    ?? process.env.npm_config_pet
+    ?? petIds.find((petId) => process.env[`npm_config_${petId}`] === 'true')
+
+  if (!petArg) {
+    return null
+  }
+  if (!petIdSet.has(petArg)) {
+    console.warn(`Unknown pet "${petArg}". Available pets: ${petIds.join(', ')}`)
+    return null
+  }
+  return petArg
+}
+
 function loadEnvironment(rootDir: string): void {
   const loadEnvFile = (process as unknown as { loadEnvFile?: (p: string) => void }).loadEnvFile
   if (typeof loadEnvFile !== 'function') {
@@ -54,17 +81,24 @@ app.whenReady().then(() => {
     fs.copyFileSync(path.join(rootDir, 'config/setting.json'), userSettingPath)
   }
   const settings = JSON.parse(fs.readFileSync(userSettingPath, 'utf8')) as Settings
+  const userPetsDir = path.join(app.getPath('userData'), 'pets')
+  seedUserPets(path.join(rootDir, 'pets'), userPetsDir)
+  const activePet = resolveDevelopmentPetId(userPetsDir) ?? settings.pet.active
+  const runtimeSettings: Settings = {
+    ...settings,
+    pet: { ...settings.pet, active: activePet },
+  }
 
   const historyStore = new PetScopedStore<ChatMessage[]>(
     path.join(app.getPath('userData'), 'chat_history.json'),
-    settings.pet.active,
+    runtimeSettings.pet.active,
     [],
     (value): value is ChatMessage[] => Array.isArray(value),
     'riolu',
   )
   const profileStore = new PetScopedStore<PetProfile>(
     path.join(app.getPath('userData'), 'pet_profile.json'),
-    settings.pet.active,
+    runtimeSettings.pet.active,
     {},
     (value): value is PetProfile => (
       typeof value === 'object'
@@ -74,15 +108,13 @@ app.whenReady().then(() => {
     ),
     'riolu',
   )
-  const userPetsDir = path.join(app.getPath('userData'), 'pets')
-  seedUserPets(path.join(rootDir, 'pets'), userPetsDir)
   const petRegistry = new PetRegistry(userPetsDir)
   const providerRegistry = new ProviderRegistry()
 
-  providerRegistry.register(new OllamaProvider(settings.ai.ollama))
-  providerRegistry.register(new OpenAIProvider(settings.ai.openai))
-  providerRegistry.register(new AnthropicProvider(settings.ai.anthropic))
-  providerRegistry.register(new GeminiProvider(settings.ai.gemini))
+  providerRegistry.register(new OllamaProvider(runtimeSettings.ai.ollama))
+  providerRegistry.register(new OpenAIProvider(runtimeSettings.ai.openai))
+  providerRegistry.register(new AnthropicProvider(runtimeSettings.ai.anthropic))
+  providerRegistry.register(new GeminiProvider(runtimeSettings.ai.gemini))
 
   if (process.platform === 'darwin') {
     app.dock?.hide()
@@ -100,7 +132,7 @@ app.whenReady().then(() => {
     profileStore,
     petRegistry,
     providerRegistry,
-    settings,
+    settings: runtimeSettings,
   })
 
   autoUpdater.checkForUpdatesAndNotify()

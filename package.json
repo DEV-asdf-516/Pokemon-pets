@@ -1,6 +1,6 @@
 {
   "name": "pokemon-pet",
-  "version": "0.0.2",
+  "version": "0.0.2-1",
   "description": "Pokemon desktop pet with LLM chat",
   "main": "main.js",
   "scripts": {

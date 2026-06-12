@@ -18,6 +18,14 @@ LLM으로 구동되는 투명 데스크탑 펫입니다. 포켓몬이 화면을 
 - **펫별 프로필:** 닉네임과 채팅 내역이 펫마다 별도로 저장됩니다.
 - **메시지 메뉴:** 메시지를 우클릭하면 복사·삭제·재전송이 가능합니다.
 
+## 기본 제공 포켓몬
+
+| 포켓몬 | 펫 ID | 개발 실행 |
+|---|---|---|
+| 리오르 | `riolu` | `npm start -- riolu` |
+| 루카리오 | `lucario` | `npm start -- lucario` |
+| 토오 | `clodsire` | `npm start -- clodsire` |
+
 ## 다운로드
 
 최신 릴리즈는 [Releases](https://github.com/DEV-asdf-516/Pokemon-pets/releases/latest)에서 받을 수 있습니다.
@@ -36,6 +44,16 @@ Node.js 20.9+, npm 필요.
 npm install
 npm start
 ```
+
+개발 모드에서 특정 포켓몬을 바로 소환하려면 `--` 뒤에 펫 ID를 넘기면 됩니다.
+
+```bash
+npm start -- lucario
+npm start -- clodsire
+npm start -- --clodsire
+```
+
+이미 앱이 실행 중이면 종료한 뒤 다른 포켓몬으로 다시 실행해야 합니다.
 
 ## AI 프로바이더
 
@@ -127,7 +145,6 @@ npm run dist       # 현재 플랫폼
 ```
 
 ## 참고 사항
-- 기본 제공 펫은 리오르와 루카리오입니다.
 - 바이브 코딩입니다.
 - Claude와 OpenAI 프로바이더는 아직 충분히 테스트하지 못했습니다. 문제가 생기면 이슈로 알려 주세요.
 
