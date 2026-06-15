@@ -27,6 +27,10 @@ A transparent desktop pet powered by an LLM. Your Pokémon wanders around your s
 | 리오르 (Riolu) | `riolu` | `npm start -- riolu` |
 | 루카리오 (Lucario) | `lucario` | `npm start -- lucario` |
 | 토오 (Clodsire) | `clodsire` | `npm start -- clodsire` |
+| 피카츄 (Pikachu) | `pikachu` | `npm start -- pikachu` |
+| 이상해씨 (Bulbasaur) | `bulbasaur` | `npm start -- bulbasaur` |
+| 파이리 (Charmander) | `charmander` | `npm start -- charmander` |
+| 꼬부기 (Squirtle) | `squirtle` | `npm start -- squirtle` |
 
 ## Download
 
@@ -50,9 +54,9 @@ npm start
 To launch a specific Pokemon in development mode, pass its pet ID after `--`:
 
 ```bash
+npm start -- pikachu
 npm start -- lucario
 npm start -- clodsire
-npm start -- --clodsire
 ```
 
 If the app is already running, quit it before starting with a different pet.

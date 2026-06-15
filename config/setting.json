@@ -1,6 +1,6 @@
 {
   "pet": {
-    "active": "riolu"
+    "active": "pikachu"
   },
   "ai": {
     "provider": "ollama",

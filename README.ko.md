@@ -25,6 +25,10 @@ LLM으로 구동되는 투명 데스크탑 펫입니다. 포켓몬이 화면을 
 | 리오르 | `riolu` | `npm start -- riolu` |
 | 루카리오 | `lucario` | `npm start -- lucario` |
 | 토오 | `clodsire` | `npm start -- clodsire` |
+| 피카츄 | `pikachu` | `npm start -- pikachu` |
+| 이상해씨 | `bulbasaur` | `npm start -- bulbasaur` |
+| 파이리 | `charmander` | `npm start -- charmander` |
+| 꼬부기 | `squirtle` | `npm start -- squirtle` |
 
 ## 다운로드
 
@@ -48,9 +52,9 @@ npm start
 개발 모드에서 특정 포켓몬을 바로 소환하려면 `--` 뒤에 펫 ID를 넘기면 됩니다.
 
 ```bash
+npm start -- pikachu
 npm start -- lucario
 npm start -- clodsire
-npm start -- --clodsire
 ```
 
 이미 앱이 실행 중이면 종료한 뒤 다른 포켓몬으로 다시 실행해야 합니다.
