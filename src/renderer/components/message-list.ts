@@ -16,6 +16,7 @@ interface MessageListOptions {
 export class MessageList {
   private readonly entries = new WeakMap<HTMLElement, ChatMessage>()
   private selectedElement: HTMLElement | null = null
+  private pendingScrollFrame: number | null = null
 
   constructor(private readonly opts: MessageListOptions) {
     opts.container.addEventListener('contextmenu', (event) => this.openMenu(event))
@@ -64,7 +65,25 @@ export class MessageList {
   }
 
   scrollToBottom(): void {
+    this.scrollToBottomNow()
+    if (this.pendingScrollFrame !== null) {
+      cancelAnimationFrame(this.pendingScrollFrame)
+    }
+    this.keepBottomPinnedForFrames(2)
+  }
+
+  private scrollToBottomNow(): void {
     this.opts.container.scrollTop = this.opts.container.scrollHeight
+  }
+
+  private keepBottomPinnedForFrames(frameCount: number): void {
+    let remainingFrames = frameCount
+    const scrollAfterLayout = (): void => {
+      this.scrollToBottomNow()
+      remainingFrames -= 1
+      this.pendingScrollFrame = remainingFrames > 0 ? requestAnimationFrame(scrollAfterLayout) : null
+    }
+    this.pendingScrollFrame = requestAnimationFrame(scrollAfterLayout)
   }
 
   private openMenu(event: MouseEvent): void {
@@ -103,7 +122,7 @@ export class MessageList {
     const element = this.selectedElement
     const entry = element && this.entries.get(element)
     this.hideMenu()
-    if (!entry || entry.role !== 'user') {
+    if (entry?.role !== 'user') {
       return
     }
     await this.opts.onResend(entry)

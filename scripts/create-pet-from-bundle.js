@@ -1,5 +1,5 @@
-const fs = require('fs')
-const path = require('path')
+const fs = require('node:fs')
+const path = require('node:path')
 const sharp = require('sharp')
 
 const REQUIRED_ANIMATIONS = ['down', 'side', 'back_side', 'back_up']
@@ -46,10 +46,10 @@ function removeBackground(data, background, tolerance) {
   const [red, green, blue, alpha = 255] = background
   for (let offset = 0; offset < data.length; offset += 4) {
     if (
-      Math.abs(data[offset] - red) <= tolerance
-      && Math.abs(data[offset + 1] - green) <= tolerance
-      && Math.abs(data[offset + 2] - blue) <= tolerance
-      && Math.abs(data[offset + 3] - alpha) <= tolerance
+      Math.abs(data[offset] - red) <= tolerance &&
+      Math.abs(data[offset + 1] - green) <= tolerance &&
+      Math.abs(data[offset + 2] - blue) <= tolerance &&
+      Math.abs(data[offset + 3] - alpha) <= tolerance
     ) {
       data[offset + 3] = 0
     }
@@ -71,11 +71,7 @@ async function renderFrame(sourcePath, frame, options) {
     .raw()
     .toBuffer({ resolveWithObject: true })
 
-  const transparent = removeBackground(
-    extracted.data,
-    options.backgroundRgba || [0, 0, 0, 0],
-    options.tolerance || 0,
-  )
+  const transparent = removeBackground(extracted.data, options.backgroundRgba || [0, 0, 0, 0], options.tolerance || 0)
   const trimmed = await sharp(transparent, { raw: extracted.info })
     .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .png()

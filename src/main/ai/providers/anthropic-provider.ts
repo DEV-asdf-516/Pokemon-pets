@@ -1,5 +1,5 @@
-import { consumeSse, requireApiKey, splitMessages } from '../provider-utils'
 import type { AnthropicConfig, Provider, StreamHandlers, StreamRequest } from '../../../types'
+import { consumeSse, requireApiKey, splitMessages } from '../provider-utils'
 
 export class AnthropicProvider implements Provider {
   readonly id = 'anthropic'
@@ -10,7 +10,7 @@ export class AnthropicProvider implements Provider {
     const apiKey = requireApiKey(this.config, 'Anthropic')
 
     const { system, conversation } = splitMessages(messages)
-    
+
     const response = await fetch(`${this.config.baseUrl}/v1/messages`, {
       method: 'POST',
       headers: {
@@ -38,8 +38,7 @@ export class AnthropicProvider implements Provider {
         if (delta?.type === 'text_delta') {
           handlers.onChunk(delta.text as string)
         }
-      } 
-      else if (event.type === 'error') {
+      } else if (event.type === 'error') {
         const err = event.error as Record<string, unknown> | undefined
         throw new Error((err?.message as string) || 'Anthropic stream error')
       }

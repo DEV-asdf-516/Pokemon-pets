@@ -1,10 +1,10 @@
-import { MessageList } from '../components/message-list.js'
 import type { ChatMessage, PetDefinition, Settings } from '../../types/index.js'
+import { MessageList } from '../components/message-list.js'
 
 interface ChatControllerOptions {
   chatWindow: HTMLElement
   messages: HTMLElement
-  userInput: HTMLInputElement
+  userInput: HTMLTextAreaElement
   messageMenu: HTMLElement
   copyButton: HTMLElement
   deleteButton: HTMLElement
@@ -16,9 +16,7 @@ interface ChatControllerOptions {
   playCry: () => void
 }
 
-type StreamResult =
-  | { ok: true; content: string }
-  | { ok: false; error: string }
+type StreamResult = { ok: true; content: string } | { ok: false; error: string }
 
 export class ChatController {
   private readonly history: ChatMessage[] = []
@@ -51,12 +49,19 @@ export class ChatController {
     opts.sendButton.addEventListener('click', () => {
       void this.sendCurrentMessage()
     })
-    opts.userInput.addEventListener('keyup', (event) => {
-      if (event.key === 'Enter') {
+    opts.userInput.addEventListener('keydown', (event) => {
+      if (event.isComposing) {
+        return
+      }
+      if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey) {
         event.preventDefault()
         void this.sendCurrentMessage()
       }
     })
+    opts.userInput.addEventListener('input', () => {
+      this.resizeInput()
+    })
+    this.resizeInput()
   }
 
   isMenuOpen(): boolean {
@@ -100,11 +105,7 @@ export class ChatController {
     }
   }
 
-  private addMessage(
-    role: ChatMessage['role'],
-    text: string,
-    entry: ChatMessage | null = null,
-  ): HTMLElement {
+  private addMessage(role: ChatMessage['role'], text: string, entry: ChatMessage | null = null): HTMLElement {
     return this.messageList.add(role, text, entry)
   }
 
@@ -228,6 +229,15 @@ export class ChatController {
     await this.sendMessage(this.opts.userInput.value)
   }
 
+  private resizeInput(): void {
+    const input = this.opts.userInput
+    input.style.height = 'auto'
+    const maxHeight = Number.parseFloat(getComputedStyle(input).maxHeight)
+    const nextHeight = Number.isFinite(maxHeight) ? Math.min(input.scrollHeight, maxHeight) : input.scrollHeight
+    input.style.height = `${nextHeight}px`
+    input.style.overflowY = input.scrollHeight > nextHeight ? 'auto' : 'hidden'
+  }
+
   private async sendMessage(text: string): Promise<void> {
     if (!text.trim() || this.isSending) {
       return
@@ -238,6 +248,8 @@ export class ChatController {
     this.history.push(userEntry)
     this.addMessage('user', text, userEntry)
     this.opts.userInput.value = ''
+    this.resizeInput()
+    this.messageList.scrollToBottom()
     try {
       await window.petAPI.history.save(this.history)
       this.setPending(true)
@@ -259,8 +271,9 @@ export class ChatController {
       const content = this.cleanAssistantText(result.content) || this.opts.petDefinition.fallbackText
       const assistantEntry: ChatMessage = { role: 'assistant', content }
       this.history.push(assistantEntry)
-      const shouldPlayCry = this.opts.petDefinition.responseCryKeywords
-        .some((keyword) => keyword && content.includes(keyword))
+      const shouldPlayCry = this.opts.petDefinition.responseCryKeywords.some(
+        (keyword) => keyword && content.includes(keyword),
+      )
       if (shouldPlayCry) {
         this.opts.playCry()
       }
@@ -288,7 +301,7 @@ export class ChatController {
 
   private streamAssistantAttempt(requestMessages: ChatMessage[]): Promise<StreamResult> {
     return new Promise((resolve) => {
-      const requestId = Date.now() + '-' + Math.random().toString(16).slice(2)
+      const requestId = `${Date.now()}-${Math.random().toString(16).slice(2)}`
       let rawContent = ''
       const cleanup = (): void => {
         unsubscribeChunk()
@@ -328,9 +341,8 @@ export class ChatController {
         cleanup()
         resolve({ ok: false, error: payload.error })
       })
-      type ProviderKey = 'ollama' | 'openai' | 'anthropic' | 'gemini'
-      const providerKey = this.opts.settings.ai.provider as ProviderKey
-      const model = (this.opts.settings.ai[providerKey] as { model: string }).model
+      const providerKey = this.opts.settings.ai.provider
+      const model = this.opts.settings.ai[providerKey].model
       window.petAPI.chat.stream({
         requestId,
         provider: this.opts.settings.ai.provider,

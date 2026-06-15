@@ -1,5 +1,5 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 export class PetScopedStore<T> {
   constructor(
@@ -27,11 +27,12 @@ export class PetScopedStore<T> {
 
   write(value: T): boolean {
     const stored = this.readRaw()
-    const scoped = this.isRecord(stored) && !this.isValue(stored)
-      ? stored
-      : this.isValue(stored)
-        ? { [this.legacyPetId]: stored }
-        : {}
+    const scoped =
+      this.isRecord(stored) && !this.isValue(stored)
+        ? stored
+        : this.isValue(stored)
+          ? { [this.legacyPetId]: stored }
+          : {}
     return this.writeAll({ ...scoped, [this.petId]: value })
   }
 

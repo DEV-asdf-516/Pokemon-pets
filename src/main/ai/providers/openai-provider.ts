@@ -1,5 +1,5 @@
-import { consumeSse, requireApiKey, splitMessages } from '../provider-utils'
 import type { OpenAIConfig, Provider, StreamHandlers, StreamRequest } from '../../../types'
+import { consumeSse, requireApiKey, splitMessages } from '../provider-utils'
 
 export class OpenAIProvider implements Provider {
   readonly id = 'openai'
@@ -33,7 +33,9 @@ export class OpenAIProvider implements Provider {
       if (event.type === 'response.output_text.delta' && event.delta) {
         handlers.onChunk(event.delta as string)
       } else if (event.type === 'response.failed') {
-        const err = (event.response as Record<string, unknown> | undefined)?.error as Record<string, unknown> | undefined
+        const err = (event.response as Record<string, unknown> | undefined)?.error as
+          | Record<string, unknown>
+          | undefined
         throw new Error((err?.message as string) || 'OpenAI request failed')
       } else if (event.type === 'error') {
         throw new Error((event.message as string) || 'OpenAI stream error')

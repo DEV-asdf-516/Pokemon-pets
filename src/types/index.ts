@@ -1,4 +1,14 @@
+export type {
+  AiSettings,
+  AnthropicConfig,
+  GeminiConfig,
+  OllamaConfig,
+  OpenAIConfig,
+  Provider,
+  ProviderKey,
+  StreamHandlers,
+  StreamRequest,
+} from './ai.js'
 export type { ChatMessage } from './chat.js'
-export type { PetProfile, PetAppearance, PetMovement, PetTheme, PetDefinition, PetState, DragOffset } from './pet.js'
-export type { StreamRequest, StreamHandlers, Provider, OllamaConfig, OpenAIConfig, AnthropicConfig, GeminiConfig, AiSettings } from './ai.js'
+export type { DragOffset, PetAppearance, PetDefinition, PetMovement, PetProfile, PetState, PetTheme } from './pet.js'
 export type { Settings } from './settings.js'

@@ -45,8 +45,10 @@ export interface GeminiConfig {
   temperature: number
 }
 
+export type ProviderKey = 'ollama' | 'openai' | 'anthropic' | 'gemini'
+
 export interface AiSettings {
-  provider: string
+  provider: ProviderKey
   ollama: OllamaConfig
   openai: OpenAIConfig
   anthropic: AnthropicConfig

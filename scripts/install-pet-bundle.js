@@ -1,6 +1,6 @@
-const fs = require('fs')
-const os = require('os')
-const path = require('path')
+const fs = require('node:fs')
+const os = require('node:os')
+const path = require('node:path')
 const { createPetFromBundle } = require('./create-pet-from-bundle')
 const { validatePet } = require('./validate-pet')
 
@@ -52,9 +52,10 @@ async function main() {
   const options = parseArgs(process.argv.slice(2))
   if (!fs.existsSync(options.bundlePath)) throw new Error(`Bundle not found: ${options.bundlePath}`)
   const bundle = JSON.parse(fs.readFileSync(options.bundlePath, 'utf8'))
-  const pet = typeof bundle.pet === 'string'
-    ? JSON.parse(fs.readFileSync(path.resolve(path.dirname(options.bundlePath), bundle.pet), 'utf8'))
-    : bundle.pet
+  const pet =
+    typeof bundle.pet === 'string'
+      ? JSON.parse(fs.readFileSync(path.resolve(path.dirname(options.bundlePath), bundle.pet), 'utf8'))
+      : bundle.pet
   const petId = pet?.id
   if (!petId) throw new Error('Bundle pet definition is missing id')
 

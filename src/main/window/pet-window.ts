@@ -1,6 +1,6 @@
-import { BrowserWindow } from 'electron'
-import path from 'path'
+import path from 'node:path'
 import type { Display } from 'electron'
+import { BrowserWindow } from 'electron'
 
 export type PetWindow = BrowserWindow & { displayId: number }
 

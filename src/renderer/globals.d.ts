@@ -49,5 +49,3 @@ declare global {
     petAPI: PetAPI
   }
 }
-
-export {}

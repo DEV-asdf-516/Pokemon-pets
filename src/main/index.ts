@@ -1,20 +1,20 @@
-import { app, globalShortcut, screen } from 'electron'
+import fs from 'node:fs'
+import path from 'node:path'
 import type { Tray } from 'electron'
+import { app, globalShortcut, screen } from 'electron'
 import { autoUpdater } from 'electron-updater'
-import path from 'path'
-import fs from 'fs'
-import { PetWindowManager } from './window/pet-window-manager'
-import { createTray } from './tray'
-import { PetScopedStore } from './services/pet-scoped-store'
-import { PetRegistry } from './services/pet-registry'
-import { seedUserPets } from './services/seed-user-pets'
+import type { ChatMessage, PetProfile, Settings } from '../types'
 import { ProviderRegistry } from './ai/provider-registry'
 import { AnthropicProvider } from './ai/providers/anthropic-provider'
 import { GeminiProvider } from './ai/providers/gemini-provider'
 import { OllamaProvider } from './ai/providers/ollama-provider'
 import { OpenAIProvider } from './ai/providers/openai-provider'
 import { registerIpc } from './ipc/register-ipc'
-import type { ChatMessage, PetProfile, Settings } from '../types'
+import { PetRegistry } from './services/pet-registry'
+import { PetScopedStore } from './services/pet-scoped-store'
+import { seedUserPets } from './services/seed-user-pets'
+import { createTray } from './tray'
+import { PetWindowManager } from './window/pet-window-manager'
 
 let windowManager: PetWindowManager | null = null
 let tray: Tray | null = null
@@ -30,11 +30,12 @@ function resolveDevelopmentPetId(userPetsDir: string): string | null {
     .map((entry) => entry.name)
   const petIdSet = new Set(petIds)
   const args = process.argv.slice(2)
-  const petArg = args.find((arg) => petIdSet.has(arg))
-    ?? args.find((arg) => arg.startsWith('--pet='))?.slice('--pet='.length)
-    ?? args.find((arg) => arg.startsWith('--') && petIdSet.has(arg.slice(2)))?.slice(2)
-    ?? process.env.npm_config_pet
-    ?? petIds.find((petId) => process.env[`npm_config_${petId}`] === 'true')
+  const petArg =
+    args.find((arg) => petIdSet.has(arg)) ??
+    args.find((arg) => arg.startsWith('--pet='))?.slice('--pet='.length) ??
+    args.find((arg) => arg.startsWith('--') && petIdSet.has(arg.slice(2)))?.slice(2) ??
+    process.env.npm_config_pet ??
+    petIds.find((petId) => process.env[`npm_config_${petId}`] === 'true')
 
   if (!petArg) {
     return null
@@ -100,12 +101,11 @@ app.whenReady().then(() => {
     path.join(app.getPath('userData'), 'pet_profile.json'),
     runtimeSettings.pet.active,
     {},
-    (value): value is PetProfile => (
-      typeof value === 'object'
-      && value !== null
-      && !Array.isArray(value)
-      && ('nickname' in value || Object.keys(value).length === 0)
-    ),
+    (value): value is PetProfile =>
+      typeof value === 'object' &&
+      value !== null &&
+      !Array.isArray(value) &&
+      ('nickname' in value || Object.keys(value).length === 0),
     'riolu',
   )
   const petRegistry = new PetRegistry(userPetsDir)
@@ -119,10 +119,7 @@ app.whenReady().then(() => {
   if (process.platform === 'darwin') {
     app.dock?.hide()
   }
-  windowManager = new PetWindowManager(
-    rootDir,
-    path.join(rootDir, 'build/preload/index.js'),
-  )
+  windowManager = new PetWindowManager(rootDir, path.join(rootDir, 'build/preload/index.js'))
   windowManager.createAll()
   tray = createTray(rootDir, windowManager)
 

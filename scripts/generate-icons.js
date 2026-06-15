@@ -1,13 +1,10 @@
-const path = require('path')
+const path = require('node:path')
 const sharp = require('sharp')
 
 const assetsDir = path.resolve(__dirname, '..', 'assets')
 
 async function render(source, output, size) {
-  await sharp(path.join(assetsDir, source))
-    .resize(size, size)
-    .png()
-    .toFile(path.join(assetsDir, output))
+  await sharp(path.join(assetsDir, source)).resize(size, size).png().toFile(path.join(assetsDir, output))
 }
 
 async function main() {

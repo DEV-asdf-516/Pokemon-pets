@@ -32,9 +32,9 @@ export function splitMessages(messages: ChatMessage[]): {
 
 export async function consumeNdjson(
   response: Response,
-  onEvent: (event: Record<string, unknown>) => boolean | void,
+  onEvent: (event: Record<string, unknown>) => boolean | undefined,
 ): Promise<void> {
-  const reader = response.body!.getReader()
+  const reader = getResponseReader(response)
   const decoder = new TextDecoder()
   let buffer = ''
 
@@ -72,11 +72,8 @@ export async function consumeNdjson(
   }
 }
 
-export async function consumeSse(
-  response: Response,
-  onEvent: (event: Record<string, unknown>) => void,
-): Promise<void> {
-  const reader = response.body!.getReader()
+export async function consumeSse(response: Response, onEvent: (event: Record<string, unknown>) => void): Promise<void> {
+  const reader = getResponseReader(response)
   const decoder = new TextDecoder()
   let buffer = ''
 
@@ -116,4 +113,11 @@ export async function consumeSse(
   if (buffer.trim()) {
     consumeBlock(buffer)
   }
+}
+
+function getResponseReader(response: Response): ReadableStreamDefaultReader<Uint8Array> {
+  if (!response.body) {
+    throw new Error('Response body is missing')
+  }
+  return response.body.getReader()
 }

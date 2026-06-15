@@ -10,9 +10,5 @@
     "resolveJsonModule": true,
     "skipLibCheck": true
   },
-  "include": [
-    "src/main/**/*",
-    "src/preload/**/*",
-    "src/types/**/*"
-  ]
+  "include": ["src/main/**/*", "src/preload/**/*", "src/types/**/*"]
 }

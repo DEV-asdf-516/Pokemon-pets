@@ -1,5 +1,5 @@
+import path from 'node:path'
 import { app, Menu, nativeImage, Tray } from 'electron'
-import path from 'path'
 import type { PetWindowManager } from './window/pet-window-manager'
 
 export function createTray(rootDir: string, windowManager: PetWindowManager): Tray {
@@ -9,17 +9,19 @@ export function createTray(rootDir: string, windowManager: PetWindowManager): Tr
 
   const tray = new Tray(icon)
   tray.setToolTip('Pokemon Pet')
-  tray.setContextMenu(Menu.buildFromTemplate([
-    {
-      label: '소환',
-      click: () => windowManager.recallAtCursor(),
-    },
-    { type: 'separator' },
-    {
-      label: 'Pokemon Pet 종료',
-      click: () => app.quit(),
-    },
-  ]))
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      {
+        label: '소환',
+        click: () => windowManager.recallAtCursor(),
+      },
+      { type: 'separator' },
+      {
+        label: 'Pokemon Pet 종료',
+        click: () => app.quit(),
+      },
+    ]),
+  )
 
   return tray
 }

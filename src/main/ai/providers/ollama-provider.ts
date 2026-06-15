@@ -1,5 +1,5 @@
-import { consumeNdjson } from '../provider-utils'
 import type { ChatMessage, OllamaConfig, Provider, StreamHandlers, StreamRequest } from '../../../types'
+import { consumeNdjson } from '../provider-utils'
 
 export class OllamaProvider implements Provider {
   readonly id = 'ollama'

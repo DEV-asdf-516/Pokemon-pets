@@ -1,8 +1,8 @@
-import { screen } from 'electron'
 import type { Display, WebContents } from 'electron'
-import { createPetWindow } from './pet-window'
-import type { PetWindow } from './pet-window'
+import { screen } from 'electron'
 import type { DragOffset, PetState } from '../../types'
+import type { PetWindow } from './pet-window'
+import { createPetWindow } from './pet-window'
 
 export class PetWindowManager {
   private readonly windows = new Map<number, PetWindow>()
@@ -164,9 +164,7 @@ export class PetWindowManager {
   recallAtCursor(): void {
     const cursor = screen.getCursorScreenPoint()
     const display = screen.getDisplayNearestPoint(cursor)
-    const chatState = this.activeDisplayId !== null
-      ? this.chatStates.get(this.activeDisplayId)
-      : undefined
+    const chatState = this.activeDisplayId !== null ? this.chatStates.get(this.activeDisplayId) : undefined
     this.activateDisplay(display.id, {
       x: cursor.x - display.workArea.x,
       y: cursor.y - display.workArea.y,
@@ -206,8 +204,7 @@ export class PetWindowManager {
       if (display.id !== this.dragDisplayId) {
         this.dragDisplayId = display.id
         this.activateDisplay(display.id, position)
-      } 
-      else {
+      } else {
         const target = this.windows.get(display.id)
         if (target && !target.isDestroyed()) {
           target.webContents.send('pet:drag-position', position)
