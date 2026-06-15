@@ -48,6 +48,11 @@ export interface PetDefinition {
   sprites: Record<string, string[]>
 }
 
+export interface PetSummary {
+  id: string
+  name: string
+}
+
 export interface PetState {
   active: boolean
   x?: number

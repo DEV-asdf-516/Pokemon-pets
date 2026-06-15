@@ -1,4 +1,5 @@
-import { clipboard, ipcMain } from 'electron'
+import fs from 'node:fs'
+import { app, clipboard, ipcMain } from 'electron'
 import type { ChatMessage, DragOffset, PetProfile, Settings } from '../../types'
 import type { ProviderRegistry } from '../ai/provider-registry'
 import type { PetRegistry } from '../services/pet-registry'
@@ -12,6 +13,7 @@ export function registerIpc({
   petRegistry,
   providerRegistry,
   settings,
+  settingsPath,
 }: {
   windowManager: PetWindowManager
   historyStore: PetScopedStore<ChatMessage[]>
@@ -19,6 +21,7 @@ export function registerIpc({
   petRegistry: PetRegistry
   providerRegistry: ProviderRegistry
   settings: Settings
+  settingsPath: string
 }): void {
   ipcMain.on('clipboard:write', (_event, text: unknown) => {
     if (typeof text === 'string') {
@@ -54,6 +57,30 @@ export function registerIpc({
     return saved
   })
   ipcMain.handle('pet:load-active', () => petRegistry.load(settings.pet.active))
+  ipcMain.handle('pet:list', () => petRegistry.list())
+  ipcMain.handle('pet:switch-active', (_event, petId: unknown) => {
+    const availablePets = petRegistry.list()
+    if (typeof petId !== 'string' || !availablePets.some((pet) => pet.id === petId)) {
+      return false
+    }
+    if (petId === settings.pet.active) {
+      return true
+    }
+
+    settings.pet.active = petId
+    fs.writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`)
+    setTimeout(() => {
+      const petIds = new Set(availablePets.map((pet) => pet.id))
+      const args = process.argv
+        .slice(1)
+        .filter(
+          (arg) => !petIds.has(arg) && !arg.startsWith('--pet=') && !(arg.startsWith('--') && petIds.has(arg.slice(2))),
+        )
+      app.relaunch({ args })
+      app.exit(0)
+    }, 100)
+    return true
+  })
   ipcMain.handle('pet:profile-load', () => profileStore.read())
   ipcMain.handle('pet:nickname-save', (_event, nickname: unknown) => {
     const profile = profileStore.read()

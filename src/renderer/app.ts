@@ -24,6 +24,10 @@ async function bootstrap(): Promise<void> {
 
   const petName = getElement('pet-name')
   const petNameInput = getElement('pet-name-input') as HTMLInputElement
+  const petPicker = getElement('pet-picker')
+  const petPickerButton = getElement('pet-picker-button') as HTMLButtonElement
+  const petPickerLabel = getElement('pet-picker-label')
+  const petPickerMenu = getElement('pet-picker-menu')
   const petImage = getElement('pet-image') as HTMLImageElement
   const petContainer = getElement('pet-container')
   const bubble = getElement('bubble')
@@ -64,6 +68,57 @@ async function bootstrap(): Promise<void> {
     petProfile,
     nameElement: petName,
     inputElement: petNameInput,
+  })
+
+  const availablePets = await window.petAPI.pet.list()
+  const closePetPicker = (): void => {
+    petPicker.classList.remove('open')
+    petPickerButton.setAttribute('aria-expanded', 'false')
+  }
+  petPickerLabel.textContent = petDefinition.name
+  petPickerMenu.replaceChildren(
+    ...availablePets.map((pet) => {
+      const option = document.createElement('button')
+      option.type = 'button'
+      option.role = 'option'
+      option.dataset.petId = pet.id
+      option.textContent = pet.name
+      option.classList.toggle('active', pet.id === petDefinition.id)
+      option.setAttribute('aria-selected', String(pet.id === petDefinition.id))
+      return option
+    }),
+  )
+  petPicker.addEventListener('mousedown', (event) => event.stopPropagation())
+  petPicker.addEventListener('click', (event) => event.stopPropagation())
+  petPickerButton.addEventListener('click', () => {
+    const open = !petPicker.classList.contains('open')
+    petPicker.classList.toggle('open', open)
+    petPickerButton.setAttribute('aria-expanded', String(open))
+  })
+  petPickerMenu.addEventListener('click', async (event) => {
+    const option = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-pet-id]')
+    const nextPetId = option?.dataset.petId
+    if (!nextPetId || nextPetId === petDefinition.id) {
+      closePetPicker()
+      return
+    }
+    petPickerButton.disabled = true
+    try {
+      const switched = await window.petAPI.pet.switchActive(nextPetId)
+      if (!switched) {
+        closePetPicker()
+        petPickerButton.disabled = false
+      }
+    } catch {
+      closePetPicker()
+      petPickerButton.disabled = false
+    }
+  })
+  document.addEventListener('click', closePetPicker)
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closePetPicker()
+    }
   })
 
   console.info('Pet renderer ready', {

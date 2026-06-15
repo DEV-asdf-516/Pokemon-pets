@@ -130,6 +130,7 @@ app.whenReady().then(() => {
     petRegistry,
     providerRegistry,
     settings: runtimeSettings,
+    settingsPath: userSettingPath,
   })
 
   autoUpdater.checkForUpdatesAndNotify()

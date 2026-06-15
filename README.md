@@ -17,6 +17,7 @@ A transparent desktop pet powered by an LLM. Your Pokémon wanders around your s
 - **Drag and drop:** You can drag the pet anywhere on screen.
 - **Summon shortcut:** Press `Ctrl+Shift+R` (or `Cmd+Shift+R` on macOS) from any app to teleport the pet to your cursor.
 - **Nickname:** Click the name in the chat titlebar to set a nickname.
+- **Pet switcher:** Use the dropdown in the chat titlebar to switch between bundled pets.
 - **Per-pet profiles:** Nicknames and chat history are saved separately for each pet.
 - **Message menu:** Right-click any message to copy, delete, or resend.
 
@@ -55,9 +56,12 @@ To launch a specific Pokemon in development mode, pass its pet ID after `--`:
 
 ```bash
 npm start -- pikachu
+npm start -- --pikachu
 npm start -- lucario
 npm start -- clodsire
 ```
+
+The chat titlebar also includes a pet dropdown. Choosing a different pet saves the selection and restarts the app.
 
 If the app is already running, quit it before starting with a different pet.
 

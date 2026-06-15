@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { ChatMessage, DragOffset, PetDefinition, PetProfile, PetState, Settings } from '../types'
+import type { ChatMessage, DragOffset, PetDefinition, PetProfile, PetState, PetSummary, Settings } from '../types'
 
 function subscribe<T>(channel: string, listener: (payload: T) => void): () => void {
   const wrapped = (_event: Electron.IpcRendererEvent, payload: T): void => listener(payload)
@@ -25,6 +25,8 @@ contextBridge.exposeInMainWorld('petAPI', {
   },
   pet: {
     loadActive: (): Promise<PetDefinition> => ipcRenderer.invoke('pet:load-active'),
+    list: (): Promise<PetSummary[]> => ipcRenderer.invoke('pet:list'),
+    switchActive: (petId: string): Promise<boolean> => ipcRenderer.invoke('pet:switch-active', petId),
     loadProfile: (): Promise<PetProfile> => ipcRenderer.invoke('pet:profile-load'),
     saveNickname: (nickname: string): Promise<boolean> => ipcRenderer.invoke('pet:nickname-save', nickname),
     onRecall: (listener: (position: { x: number; y: number }) => void) => subscribe('pet:recall', listener),

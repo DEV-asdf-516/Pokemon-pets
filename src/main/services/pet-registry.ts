@@ -1,10 +1,22 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import type { PetDefinition } from '../../types'
+import type { PetDefinition, PetSummary } from '../../types'
 
 export class PetRegistry {
   constructor(private readonly petsDir: string) {}
+
+  list(): PetSummary[] {
+    return fs
+      .readdirSync(this.petsDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => {
+        const id = entry.name
+        const definition = JSON.parse(fs.readFileSync(path.join(this.petsDir, id, 'pet.json'), 'utf8')) as PetDefinition
+        return { id, name: definition.name }
+      })
+      .sort((a, b) => a.id.localeCompare(b.id))
+  }
 
   load(petId: string): PetDefinition {
     const petDir = path.join(this.petsDir, petId)

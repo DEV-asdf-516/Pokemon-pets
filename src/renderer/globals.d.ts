@@ -1,4 +1,12 @@
-import type { ChatMessage, DragOffset, PetDefinition, PetProfile, PetState, Settings } from '../types/index.js'
+import type {
+  ChatMessage,
+  DragOffset,
+  PetDefinition,
+  PetProfile,
+  PetState,
+  PetSummary,
+  Settings,
+} from '../types/index.js'
 
 interface StreamPayload {
   requestId: string
@@ -21,6 +29,8 @@ interface PetAPI {
   }
   pet: {
     loadActive(): Promise<PetDefinition>
+    list(): Promise<PetSummary[]>
+    switchActive(petId: string): Promise<boolean>
     loadProfile(): Promise<PetProfile>
     saveNickname(nickname: string): Promise<boolean>
     onRecall(listener: (position: { x: number; y: number }) => void): () => void

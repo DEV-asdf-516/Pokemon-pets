@@ -10,5 +10,14 @@ export type {
   StreamRequest,
 } from './ai.js'
 export type { ChatMessage } from './chat.js'
-export type { DragOffset, PetAppearance, PetDefinition, PetMovement, PetProfile, PetState, PetTheme } from './pet.js'
+export type {
+  DragOffset,
+  PetAppearance,
+  PetDefinition,
+  PetMovement,
+  PetProfile,
+  PetState,
+  PetSummary,
+  PetTheme,
+} from './pet.js'
 export type { Settings } from './settings.js'

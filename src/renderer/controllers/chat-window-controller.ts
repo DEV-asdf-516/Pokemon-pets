@@ -57,7 +57,8 @@ export class ChatWindowController {
   }
 
   private startChatDrag(event: MouseEvent): void {
-    if ((event.target as HTMLElement).id === 'close-chat') {
+    const target = event.target as HTMLElement
+    if (target.id === 'close-chat' || target.closest('button,input,select,textarea,#pet-picker')) {
       return
     }
     const chatRect = this.opts.chatWindow.getBoundingClientRect()
