@@ -95,11 +95,11 @@ body.pet-inactive #chat-window {
 }
 #pet-name-wrap {
   min-width: 0;
-  flex: 1;
+  flex: 1 1 auto;
 }
 #pet-name {
   display: block;
-  max-width: 128px;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -107,7 +107,8 @@ body.pet-inactive #chat-window {
 }
 #pet-name-input {
   display: none;
-  width: 170px;
+  width: 100%;
+  min-width: 0;
   padding: 2px 6px;
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 5px;
@@ -119,6 +120,7 @@ body.pet-inactive #chat-window {
 #pet-picker {
   position: relative;
   flex: 0 0 auto;
+  min-width: 0;
 }
 #pet-picker-button {
   display: flex;
@@ -200,6 +202,7 @@ body.pet-inactive #chat-window {
   color: var(--pet-accent-hover);
 }
 #close-chat {
+  flex: 0 0 auto;
   cursor: pointer;
   font-size: 16px;
   opacity: 0.8;
