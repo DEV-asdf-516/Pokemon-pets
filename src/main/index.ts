@@ -95,7 +95,6 @@ app.whenReady().then(() => {
     runtimeSettings.pet.active,
     [],
     (value): value is ChatMessage[] => Array.isArray(value),
-    'riolu',
   )
   const profileStore = new PetScopedStore<PetProfile>(
     path.join(app.getPath('userData'), 'pet_profile.json'),
@@ -106,7 +105,6 @@ app.whenReady().then(() => {
       value !== null &&
       !Array.isArray(value) &&
       ('nickname' in value || Object.keys(value).length === 0),
-    'riolu',
   )
   const petRegistry = new PetRegistry(userPetsDir)
   const providerRegistry = new ProviderRegistry()

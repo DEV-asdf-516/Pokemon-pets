@@ -7,15 +7,10 @@ export class PetScopedStore<T> {
     private readonly petId: string,
     private readonly fallbackValue: T,
     private readonly isValue: (value: unknown) => value is T,
-    private readonly legacyPetId = petId,
   ) {}
 
   read(): T {
     const stored = this.readRaw()
-    if (this.isValue(stored)) {
-      this.writeAll({ [this.legacyPetId]: stored })
-      return this.petId === this.legacyPetId ? stored : this.fallbackValue
-    }
     if (this.isRecord(stored)) {
       const scopedValue = stored[this.petId]
       if (this.isValue(scopedValue)) {
@@ -27,12 +22,7 @@ export class PetScopedStore<T> {
 
   write(value: T): boolean {
     const stored = this.readRaw()
-    const scoped =
-      this.isRecord(stored) && !this.isValue(stored)
-        ? stored
-        : this.isValue(stored)
-          ? { [this.legacyPetId]: stored }
-          : {}
+    const scoped = this.isRecord(stored) ? stored : {}
     return this.writeAll({ ...scoped, [this.petId]: value })
   }
 
