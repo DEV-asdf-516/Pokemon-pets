@@ -6,6 +6,7 @@ interface PetMotionControllerOptions {
   petContainer: HTMLElement
   initialPosition: { x: number; y: number }
   canWalk: () => boolean
+  getMinY?: () => number
   onPositionApplied: () => void
 }
 
@@ -73,8 +74,10 @@ export class PetMotionController {
   }
 
   setPosition(x: number, y: number): void {
+    const minY = this.getMinY()
+    const maxY = this.getMaxY()
     this.x = Math.max(0, Math.min(window.innerWidth - this.width, x))
-    this.y = Math.max(0, Math.min(window.innerHeight - this.height, y))
+    this.y = Math.max(minY, Math.min(maxY, y))
     this.applyPosition()
   }
 
@@ -169,7 +172,15 @@ export class PetMotionController {
   private canOccupyPosition(x: number, y: number): boolean {
     const centerX = x + this.width / 2
     const centerY = y + this.height / 2
-    return centerX >= 0 && centerX <= window.innerWidth && centerY >= 0 && centerY <= window.innerHeight
+    return centerX >= 0 && centerX <= window.innerWidth && y >= this.getMinY() && centerY <= window.innerHeight
+  }
+
+  private getMinY(): number {
+    return Math.max(0, Math.min(window.innerHeight - this.height, this.opts.getMinY?.() ?? 0))
+  }
+
+  private getMaxY(): number {
+    return Math.max(this.getMinY(), window.innerHeight - this.height)
   }
 
   private applyPosition(): void {

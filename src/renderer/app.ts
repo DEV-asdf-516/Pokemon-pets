@@ -59,8 +59,13 @@ async function bootstrap(): Promise<void> {
     petContainer,
     initialPosition: getInitialPetPosition(petDefinition, launchParams),
     canWalk: () => isPetActive && !chatOpen && !isDragging,
+    getMinY: () => bubbleController.getRequiredAnchorTop(),
     onPositionApplied: () => bubbleController.updatePosition(),
   })
+  const showBubble = (text: string, duration?: number): void => {
+    bubbleController.show(text, duration)
+    petMotion.clampToViewport()
+  }
 
   document.body.classList.toggle('pet-inactive', !isPetActive)
   new NicknameController({
@@ -140,7 +145,7 @@ async function bootstrap(): Promise<void> {
     const delay = minDelay + Math.random() * (maxDelay - minDelay)
     setTimeout(() => {
       if (!chatOpen && isPetActive && idlePhrases.length > 0) {
-        bubbleController.show(idlePhrases[Math.floor(Math.random() * idlePhrases.length)], 5000)
+        showBubble(idlePhrases[Math.floor(Math.random() * idlePhrases.length)], 5000)
         playCry()
       }
       scheduleIdleTalk()
@@ -231,7 +236,7 @@ async function bootstrap(): Promise<void> {
       position && Number.isFinite(position.x) ? position.x - petMotion.width / 2 : fallback.x,
       position && Number.isFinite(position.y) ? position.y - petMotion.height : fallback.y,
     )
-    bubbleController.show(petDefinition.recallText, 1500)
+    showBubble(petDefinition.recallText, 1500)
   })
 
   window.petAPI.pet.onSetActive((state) => {
@@ -262,7 +267,7 @@ async function bootstrap(): Promise<void> {
       petMotion.startWalk()
     }
     if (state.recall) {
-      bubbleController.show(petDefinition.recallText, 1500)
+      showBubble(petDefinition.recallText, 1500)
     }
     if (typeof state.chatOpen === 'boolean') {
       chatOpen = state.chatOpen

@@ -4,6 +4,8 @@ interface BubbleControllerOptions {
 }
 
 export class BubbleController {
+  private readonly viewportMargin = 6
+  private readonly anchorGap = 10
   private hideTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor(private readonly opts: BubbleControllerOptions) {}
@@ -29,6 +31,13 @@ export class BubbleController {
     this.opts.bubble.style.display = 'none'
   }
 
+  getRequiredAnchorTop(): number {
+    if (this.opts.bubble.style.display !== 'block') {
+      return 0
+    }
+    return this.opts.bubble.offsetHeight + this.anchorGap + this.viewportMargin
+  }
+
   updatePosition(): void {
     if (this.opts.bubble.style.display !== 'block') {
       return
@@ -36,7 +45,13 @@ export class BubbleController {
     const rect = this.opts.anchor.getBoundingClientRect()
     const bubbleWidth = this.opts.bubble.offsetWidth || 200
     const left = rect.left + rect.width / 2 - bubbleWidth / 2
-    this.opts.bubble.style.left = `${Math.max(6, Math.min(window.innerWidth - bubbleWidth - 6, left))}px`
-    this.opts.bubble.style.top = `${Math.max(6, rect.top - this.opts.bubble.offsetHeight - 10)}px`
+    this.opts.bubble.style.left = `${Math.max(
+      this.viewportMargin,
+      Math.min(window.innerWidth - bubbleWidth - this.viewportMargin, left),
+    )}px`
+    this.opts.bubble.style.top = `${Math.max(
+      this.viewportMargin,
+      rect.top - this.opts.bubble.offsetHeight - this.anchorGap,
+    )}px`
   }
 }
