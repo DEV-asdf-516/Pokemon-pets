@@ -12,7 +12,14 @@ interface ChatWindowControllerOptions {
   resizeHandles: Iterable<HTMLElement>
   petMotion: PetMotionLike
   chatPetGap: number
-  onStartDrag: (payload: { x: number; y: number; chatWidth: number; chatHeight: number }) => void
+  onStartDrag: (payload: {
+    x: number
+    y: number
+    startX: number
+    startY: number
+    chatWidth: number
+    chatHeight: number
+  }) => void
   onStopPetDrag: (wasChatDragging: boolean) => void
   onPointerMoveIdle: (x: number, y: number) => void
   onPointerUp: (x: number, y: number) => void
@@ -83,6 +90,8 @@ export class ChatWindowController {
     this.opts.onStartDrag({
       x: event.clientX - petRect.left,
       y: event.clientY - petRect.top,
+      startX: this.opts.petMotion.position.x,
+      startY: this.opts.petMotion.position.y,
       chatWidth: chatRect.width,
       chatHeight: chatRect.height,
     })

@@ -57,6 +57,8 @@ async function bootstrap(): Promise<void> {
         startY: number
         offsetX: number
         offsetY: number
+        petX: number
+        petY: number
         chatOpen: boolean
         chatWidth?: number
         chatHeight?: number
@@ -219,6 +221,8 @@ async function bootstrap(): Promise<void> {
     window.petAPI.pet.startDrag({
       x: pendingPetDrag.offsetX,
       y: pendingPetDrag.offsetY,
+      startX: pendingPetDrag.petX,
+      startY: pendingPetDrag.petY,
       chatOpen: pendingPetDrag.chatOpen,
       chatWidth: pendingPetDrag.chatWidth,
       chatHeight: pendingPetDrag.chatHeight,
@@ -345,11 +349,13 @@ async function bootstrap(): Promise<void> {
     resizeHandles: Array.from(document.querySelectorAll<HTMLElement>('.resize-handle')),
     petMotion,
     chatPetGap,
-    onStartDrag: ({ x, y, chatWidth, chatHeight }) => {
+    onStartDrag: ({ x, y, startX, startY, chatWidth, chatHeight }) => {
       petDragStarted = true
       window.petAPI.pet.startDrag({
         x,
         y,
+        startX,
+        startY,
         chatOpen: true,
         chatWidth,
         chatHeight,
@@ -420,6 +426,8 @@ async function bootstrap(): Promise<void> {
       startY: event.clientY,
       offsetX: event.clientX - petRect.left,
       offsetY: event.clientY - petRect.top,
+      petX: petMotion.position.x,
+      petY: petMotion.position.y,
       chatOpen,
       chatWidth: chatRect ? chatRect.width : undefined,
       chatHeight: chatRect ? chatRect.height : undefined,

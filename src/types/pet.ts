@@ -67,6 +67,8 @@ export interface PetState {
 export interface DragOffset {
   x: number
   y: number
+  startX?: number
+  startY?: number
   chatOpen?: boolean
   chatWidth?: number
   chatHeight?: number

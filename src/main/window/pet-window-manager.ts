@@ -12,6 +12,9 @@ export class PetWindowManager {
   private dragTimer: ReturnType<typeof setInterval> | null = null
   private dragDisplayId: number | null = null
   private dragOffset = { x: 0, y: 0 }
+  private dragStartCursor: Point | null = null
+  private dragStartPosition: { x: number; y: number } | null = null
+  private dragSourceDisplayId: number | null = null
   private pendingChatOpen: boolean | undefined = undefined
   private pendingChatWidth: number | undefined = undefined
   private pendingChatHeight: number | undefined = undefined
@@ -194,10 +197,16 @@ export class PetWindowManager {
 
     this.activeDisplayId = source.displayId
     this.dragDisplayId = source.displayId
+    this.dragSourceDisplayId = source.displayId
     this.dragOffset = {
       x: Number(offset?.x) || 0,
       y: Number(offset?.y) || 0,
     }
+    this.dragStartCursor = screen.getCursorScreenPoint()
+    this.dragStartPosition =
+      Number.isFinite(offset?.startX) && Number.isFinite(offset?.startY)
+        ? { x: Number(offset.startX), y: Number(offset.startY) }
+        : null
     this.pendingChatOpen = offset?.chatOpen !== undefined ? Boolean(offset.chatOpen) : undefined
     this.pendingChatWidth = offset?.chatWidth !== undefined ? Number(offset.chatWidth) : undefined
     this.pendingChatHeight = offset?.chatHeight !== undefined ? Number(offset.chatHeight) : undefined
@@ -206,11 +215,21 @@ export class PetWindowManager {
       const cursor = screen.getCursorScreenPoint()
       const display = screen.getDisplayNearestPoint(cursor)
       const point = this.getWindowLocalPoint(display, cursor)
-      const position = {
-        x: point.x - this.dragOffset.x,
-        y: point.y - this.dragOffset.y,
-        dragging: true,
-      }
+      const dragStartCursor = this.dragStartCursor
+      const dragStartPosition = this.dragStartPosition
+      const sameDisplayDrag =
+        display.id === this.dragSourceDisplayId && dragStartCursor !== null && dragStartPosition !== null
+      const position = sameDisplayDrag
+        ? {
+            x: dragStartPosition.x + cursor.x - dragStartCursor.x,
+            y: dragStartPosition.y + cursor.y - dragStartCursor.y,
+            dragging: true,
+          }
+        : {
+            x: point.x - this.dragOffset.x,
+            y: point.y - this.dragOffset.y,
+            dragging: true,
+          }
 
       if (display.id !== this.dragDisplayId) {
         this.dragDisplayId = display.id
@@ -231,6 +250,9 @@ export class PetWindowManager {
     }
     this.dragTimer = null
     this.dragDisplayId = null
+    this.dragStartCursor = null
+    this.dragStartPosition = null
+    this.dragSourceDisplayId = null
     this.pendingChatOpen = undefined
     const active = this.getActiveWindow()
     if (notify && wasDragging && active && !active.isDestroyed()) {
