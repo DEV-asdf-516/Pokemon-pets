@@ -51,6 +51,17 @@ async function bootstrap(): Promise<void> {
   let isDragging = false
   let petDragStarted = false
   let clickThreshold = true
+  let pendingPetDrag:
+    | {
+        startX: number
+        startY: number
+        offsetX: number
+        offsetY: number
+        chatOpen: boolean
+        chatWidth?: number
+        chatHeight?: number
+      }
+    | undefined
 
   const bubbleController = new BubbleController({ bubble, anchor: petContainer })
   const petMotion = new PetMotionController({
@@ -58,7 +69,7 @@ async function bootstrap(): Promise<void> {
     petImage,
     petContainer,
     initialPosition: getInitialPetPosition(petDefinition, launchParams),
-    canWalk: () => isPetActive && !chatOpen && !isDragging,
+    canWalk: () => isPetActive && !chatOpen && !isDragging && !pendingPetDrag,
     getMinY: () => bubbleController.getRequiredAnchorTop(),
     onPositionApplied: () => bubbleController.updatePosition(),
   })
@@ -196,6 +207,22 @@ async function bootstrap(): Promise<void> {
       return
     }
     setMouseIgnore(!isPointOnInteractiveArea(x, y))
+  }
+
+  function startPendingPetDrag(): void {
+    if (!pendingPetDrag || petDragStarted) {
+      return
+    }
+    isDragging = true
+    petDragStarted = true
+    clickThreshold = false
+    window.petAPI.pet.startDrag({
+      x: pendingPetDrag.offsetX,
+      y: pendingPetDrag.offsetY,
+      chatOpen: pendingPetDrag.chatOpen,
+      chatWidth: pendingPetDrag.chatWidth,
+      chatHeight: pendingPetDrag.chatHeight,
+    })
   }
 
   function updateChatPos(): void {
@@ -350,27 +377,53 @@ async function bootstrap(): Promise<void> {
   chatWindow.addEventListener('mouseenter', () => setMouseIgnore(false))
   chatWindow.addEventListener('mouseleave', (event) => syncMouseIgnore(event.clientX, event.clientY))
   document.addEventListener('mouseleave', () => {
-    if (!isDragging && !chatWindowController.isInteracting()) {
+    if (!isDragging && !pendingPetDrag && !chatWindowController.isInteracting()) {
       setMouseIgnore(true)
     }
   })
 
+  document.addEventListener('mousemove', (event) => {
+    if (!pendingPetDrag) {
+      return
+    }
+    const dx = event.clientX - pendingPetDrag.startX
+    const dy = event.clientY - pendingPetDrag.startY
+    if (Math.hypot(dx, dy) > 4) {
+      startPendingPetDrag()
+    }
+  })
+
+  document.addEventListener('mouseup', (event) => {
+    if (!pendingPetDrag) {
+      return
+    }
+    const wasDragging = petDragStarted
+    pendingPetDrag = undefined
+    petDragStarted = false
+    if (wasDragging) {
+      window.petAPI.pet.stopDrag()
+    } else {
+      isDragging = false
+      syncMouseIgnore(event.clientX, event.clientY)
+    }
+  })
+
   petContainer.addEventListener('mousedown', (event) => {
-    isDragging = true
-    petDragStarted = true
     clickThreshold = true
     const petRect = petContainer.getBoundingClientRect()
     petMotion.setDirectionDown()
     petMotion.stopWalk()
     setMouseIgnore(false)
     const chatRect = chatOpen ? chatWindow.getBoundingClientRect() : null
-    window.petAPI.pet.startDrag({
-      x: event.clientX - petRect.left,
-      y: event.clientY - petRect.top,
+    pendingPetDrag = {
+      startX: event.clientX,
+      startY: event.clientY,
+      offsetX: event.clientX - petRect.left,
+      offsetY: event.clientY - petRect.top,
       chatOpen,
       chatWidth: chatRect ? chatRect.width : undefined,
       chatHeight: chatRect ? chatRect.height : undefined,
-    })
+    }
     event.preventDefault()
   })
 

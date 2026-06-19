@@ -1,4 +1,4 @@
-import type { Display, WebContents } from 'electron'
+import type { Display, Point, WebContents } from 'electron'
 import { screen } from 'electron'
 import type { DragOffset, PetState } from '../../types'
 import type { PetWindow } from './pet-window'
@@ -161,13 +161,23 @@ export class PetWindowManager {
     this.chatStates.set(displayId, { open, width, height })
   }
 
+  private getWindowLocalPoint(display: Display, cursor: Point): { x: number; y: number } {
+    const win = this.windows.get(display.id)
+    const bounds = win && !win.isDestroyed() ? win.getBounds() : display.workArea
+    return {
+      x: cursor.x - bounds.x,
+      y: cursor.y - bounds.y,
+    }
+  }
+
   recallAtCursor(): void {
     const cursor = screen.getCursorScreenPoint()
     const display = screen.getDisplayNearestPoint(cursor)
+    const point = this.getWindowLocalPoint(display, cursor)
     const chatState = this.activeDisplayId !== null ? this.chatStates.get(this.activeDisplayId) : undefined
     this.activateDisplay(display.id, {
-      x: cursor.x - display.workArea.x,
-      y: cursor.y - display.workArea.y,
+      x: point.x,
+      y: point.y,
       recall: true,
       chatOpen: chatState?.open,
       chatWidth: chatState?.width,
@@ -195,9 +205,10 @@ export class PetWindowManager {
     this.dragTimer = setInterval(() => {
       const cursor = screen.getCursorScreenPoint()
       const display = screen.getDisplayNearestPoint(cursor)
+      const point = this.getWindowLocalPoint(display, cursor)
       const position = {
-        x: cursor.x - display.workArea.x - this.dragOffset.x,
-        y: cursor.y - display.workArea.y - this.dragOffset.y,
+        x: point.x - this.dragOffset.x,
+        y: point.y - this.dragOffset.y,
         dragging: true,
       }
 
