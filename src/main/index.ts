@@ -82,9 +82,13 @@ app.whenReady().then(() => {
     fs.copyFileSync(path.join(rootDir, 'config/setting.json'), userSettingPath)
   }
   const settings = JSON.parse(fs.readFileSync(userSettingPath, 'utf8')) as Settings
+  const bundledPetsDir = path.join(rootDir, 'pets')
   const userPetsDir = path.join(app.getPath('userData'), 'pets')
-  seedUserPets(path.join(rootDir, 'pets'), userPetsDir)
-  const activePet = resolveDevelopmentPetId(userPetsDir) ?? settings.pet.active
+  const petsDir = app.isPackaged ? userPetsDir : bundledPetsDir
+  if (app.isPackaged) {
+    seedUserPets(bundledPetsDir, userPetsDir)
+  }
+  const activePet = resolveDevelopmentPetId(petsDir) ?? settings.pet.active
   const runtimeSettings: Settings = {
     ...settings,
     pet: { ...settings.pet, active: activePet },
@@ -106,7 +110,7 @@ app.whenReady().then(() => {
       !Array.isArray(value) &&
       ('nickname' in value || Object.keys(value).length === 0),
   )
-  const petRegistry = new PetRegistry(userPetsDir)
+  const petRegistry = new PetRegistry(petsDir)
   const providerRegistry = new ProviderRegistry()
 
   providerRegistry.register(new OllamaProvider(runtimeSettings.ai.ollama))
