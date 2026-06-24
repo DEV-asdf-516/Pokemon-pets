@@ -81,7 +81,7 @@ async function bootstrap(): Promise<void> {
   }
 
   document.body.classList.toggle('pet-inactive', !isPetActive)
-  new NicknameController({
+  const nicknameController = new NicknameController({
     petDefinition,
     petProfile,
     nameElement: petName,
@@ -188,6 +188,7 @@ async function bootstrap(): Promise<void> {
     sendButton: getElement('send-btn'),
     petDefinition,
     settings,
+    getPetNickname: () => nicknameController.customNickname,
     isOpen: () => chatOpen,
     playCry,
   })

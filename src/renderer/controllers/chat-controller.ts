@@ -1,5 +1,5 @@
 import type { ChatMessage, PetDefinition, Settings } from '../../types/index.js'
-import { MessageList } from '../components/message-list.js'
+import { MessageList, type RenderedMessage } from '../components/message-list.js'
 
 interface ChatControllerOptions {
   chatWindow: HTMLElement
@@ -12,11 +12,15 @@ interface ChatControllerOptions {
   sendButton: HTMLElement
   petDefinition: PetDefinition
   settings: Settings
+  getPetNickname: () => string | null
   isOpen: () => boolean
   playCry: () => void
 }
 
 type StreamResult = { ok: true; content: string } | { ok: false; error: string }
+
+const MODEL_CONTEXT_MESSAGE_LIMIT = 10
+const RENDER_BATCH_SIZE = 50
 
 export class ChatController {
   private readonly history: ChatMessage[] = []
@@ -25,6 +29,7 @@ export class ChatController {
   private isSending = false
   private isPending = false
   private pendingMessage: HTMLElement | null = null
+  private renderedStartIndex = 0
 
   constructor(private readonly opts: ChatControllerOptions) {
     this.messageList = new MessageList({
@@ -38,6 +43,7 @@ export class ChatController {
       onDelete: async (entry) => this.deleteMessage(entry),
       onCopy: (text) => window.petAPI.clipboard.writeText(text),
       onResend: async (entry) => this.sendMessage(entry.content),
+      onLoadMore: () => this.loadMoreRenderedHistory(),
     })
 
     window.petAPI.history.onUpdated((payload) => {
@@ -156,11 +162,36 @@ export class ChatController {
 
   private renderHistory(): void {
     this.clearPendingMessage()
-    this.messageList.clear()
-    for (const message of this.history) {
-      this.addMessage(message.role, message.content, message)
-    }
+    this.renderedStartIndex = Math.max(0, this.history.length - RENDER_BATCH_SIZE)
+    const visibleMessages = this.renderedMessages(this.renderedStartIndex)
+    this.messageList.render(visibleMessages)
     this.renderPendingMessage()
+  }
+
+  private loadMoreRenderedHistory(): void {
+    if (this.renderedStartIndex <= 0) {
+      return
+    }
+    const endIndex = this.renderedStartIndex
+    this.renderedStartIndex = Math.max(0, endIndex - RENDER_BATCH_SIZE)
+    const olderMessages = this.renderedMessages(this.renderedStartIndex, endIndex)
+    this.messageList.prepend(olderMessages)
+  }
+
+  private renderedMessages(startIndex: number, endIndex?: number): RenderedMessage[] {
+    return this.history.slice(startIndex, endIndex).map((message) => ({
+      role: message.role,
+      text: message.content,
+      entry: message,
+    }))
+  }
+
+  private systemPrompt(): string {
+    const nickname = this.opts.getPetNickname()
+    if (!nickname) {
+      return this.opts.petDefinition.prompt
+    }
+    return `${this.opts.petDefinition.prompt}\n\nThe user has named you "${nickname}". Treat this as your current name.`
   }
 
   private replaceHistory(history: ChatMessage[], { rerender = true } = {}): void {
@@ -254,10 +285,10 @@ export class ChatController {
       await window.petAPI.history.save(this.history)
       this.setPending(true)
       window.petAPI.chat.setPending(true)
-      const requestMessages: ChatMessage[] = [
-        { role: 'system', content: this.opts.petDefinition.prompt },
-        ...this.history,
-      ]
+      const systemPrompt = this.systemPrompt()
+      const recentHistory = this.history.slice(-MODEL_CONTEXT_MESSAGE_LIMIT)
+      const requestMessages: ChatMessage[] = [{ role: 'system', content: systemPrompt }]
+      requestMessages.push(...recentHistory)
       const result = await this.streamAssistantAttempt(requestMessages)
       const responseElement = this.pendingMessage
       if (responseElement) {

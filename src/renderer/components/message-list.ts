@@ -11,7 +11,16 @@ interface MessageListOptions {
   onCopy: (text: string) => void
   onDelete: (entry: ChatMessage) => Promise<void>
   onResend: (entry: ChatMessage) => Promise<void>
+  onLoadMore: () => void
 }
+
+export interface RenderedMessage {
+  role: ChatMessage['role']
+  text: string
+  entry: ChatMessage | null
+}
+
+const LOAD_MORE_SCROLL_THRESHOLD_PX = 24
 
 export class MessageList {
   private readonly entries = new WeakMap<HTMLElement, ChatMessage>()
@@ -20,6 +29,11 @@ export class MessageList {
 
   constructor(private readonly opts: MessageListOptions) {
     opts.container.addEventListener('contextmenu', (event) => this.openMenu(event))
+    opts.container.addEventListener('scroll', () => {
+      if (opts.container.scrollTop <= LOAD_MORE_SCROLL_THRESHOLD_PX) {
+        opts.onLoadMore()
+      }
+    })
     opts.deleteButton.addEventListener('click', () => {
       void this.deleteSelected()
     })
@@ -34,7 +48,49 @@ export class MessageList {
     })
   }
 
-  add(role: ChatMessage['role'], text: string, entry: ChatMessage | null = null): HTMLElement {
+  add(
+    role: ChatMessage['role'],
+    text: string,
+    entry: ChatMessage | null = null,
+    { scroll = true }: { scroll?: boolean } = {},
+  ): HTMLElement {
+    const element = this.createElement(role, text, entry)
+    this.opts.container.appendChild(element)
+    if (scroll) {
+      this.scrollToBottom()
+    }
+    return element
+  }
+
+  render(messages: RenderedMessage[]): void {
+    this.hideMenu()
+    const fragment = document.createDocumentFragment()
+    for (const message of messages) {
+      fragment.appendChild(this.createElement(message.role, message.text, message.entry))
+    }
+    this.opts.container.replaceChildren(fragment)
+    this.scrollToBottom()
+  }
+
+  prepend(messages: RenderedMessage[]): void {
+    if (messages.length === 0) {
+      return
+    }
+    this.hideMenu()
+    if (this.pendingScrollFrame !== null) {
+      cancelAnimationFrame(this.pendingScrollFrame)
+      this.pendingScrollFrame = null
+    }
+    const previousScrollHeight = this.opts.container.scrollHeight
+    const fragment = document.createDocumentFragment()
+    for (const message of messages) {
+      fragment.appendChild(this.createElement(message.role, message.text, message.entry))
+    }
+    this.opts.container.prepend(fragment)
+    this.opts.container.scrollTop += this.opts.container.scrollHeight - previousScrollHeight
+  }
+
+  private createElement(role: ChatMessage['role'], text: string, entry: ChatMessage | null = null): HTMLElement {
     const element = document.createElement('div')
     element.className = `msg ${role}`
     element.textContent = text
@@ -44,8 +100,6 @@ export class MessageList {
     if (entry) {
       this.bind(element, entry)
     }
-    this.opts.container.appendChild(element)
-    this.scrollToBottom()
     return element
   }
 

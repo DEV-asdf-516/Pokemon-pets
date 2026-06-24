@@ -29,6 +29,11 @@ export class NicknameController {
     return `🐾 ${this.currentNickname}`
   }
 
+  get customNickname(): string | null {
+    const nickname = this.currentNickname.trim()
+    return nickname && nickname !== this.opts.petDefinition.name ? nickname : null
+  }
+
   private startEdit(event: Event): void {
     event.stopPropagation()
     this.saveOnBlur = true

@@ -49,10 +49,10 @@ export function registerIpc({
 
   ipcMain.handle('history:load', () => historyStore.read())
   ipcMain.handle('history:save', (event, history: ChatMessage[]) => {
-    const trimmed = Array.isArray(history) ? history.slice(-50) : []
-    const saved = historyStore.write(trimmed)
+    const savedHistory = Array.isArray(history) ? history : []
+    const saved = historyStore.write(savedHistory)
     if (saved) {
-      windowManager.broadcastExcept('history:updated', { history: trimmed }, event.sender)
+      windowManager.broadcastExcept('history:updated', { history: savedHistory }, event.sender)
     }
     return saved
   })
