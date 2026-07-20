@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import type { Tray } from 'electron'
-import { app, globalShortcut, screen } from 'electron'
+import { app, dialog, globalShortcut, screen } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import type { ChatMessage, PetProfile, Settings } from '../types'
 import { ProviderRegistry } from './ai/provider-registry'
@@ -73,85 +73,91 @@ app.on('second-instance', () => {
   }
 })
 
-app.whenReady().then(() => {
-  const rootDir = path.resolve(__dirname, '../..')
-  loadEnvironment(rootDir)
+app
+  .whenReady()
+  .then(() => {
+    const rootDir = path.resolve(__dirname, '../..')
+    loadEnvironment(rootDir)
 
-  const userSettingPath = path.join(app.getPath('userData'), 'setting.json')
-  if (!fs.existsSync(userSettingPath)) {
-    fs.copyFileSync(path.join(rootDir, 'config/setting.json'), userSettingPath)
-  }
-  const settings = JSON.parse(fs.readFileSync(userSettingPath, 'utf8')) as Settings
-  const bundledPetsDir = path.join(rootDir, 'pets')
-  const userPetsDir = path.join(app.getPath('userData'), 'pets')
-  const petsDir = app.isPackaged ? userPetsDir : bundledPetsDir
-  if (app.isPackaged) {
-    seedUserPets(bundledPetsDir, userPetsDir)
-  }
-  const activePet = resolveDevelopmentPetId(petsDir) ?? settings.pet.active
-  const runtimeSettings: Settings = {
-    ...settings,
-    pet: { ...settings.pet, active: activePet },
-  }
-
-  const historyStore = new PetScopedStore<ChatMessage[]>(
-    path.join(app.getPath('userData'), 'chat_history.json'),
-    runtimeSettings.pet.active,
-    [],
-    (value): value is ChatMessage[] => Array.isArray(value),
-  )
-  const profileStore = new PetScopedStore<PetProfile>(
-    path.join(app.getPath('userData'), 'pet_profile.json'),
-    runtimeSettings.pet.active,
-    {},
-    (value): value is PetProfile =>
-      typeof value === 'object' &&
-      value !== null &&
-      !Array.isArray(value) &&
-      ('nickname' in value || Object.keys(value).length === 0),
-  )
-  const petRegistry = new PetRegistry(petsDir)
-  const providerRegistry = new ProviderRegistry()
-
-  providerRegistry.register(new OllamaProvider(runtimeSettings.ai.ollama))
-  providerRegistry.register(new OpenAIProvider(runtimeSettings.ai.openai))
-  providerRegistry.register(new AnthropicProvider(runtimeSettings.ai.anthropic))
-  providerRegistry.register(new GeminiProvider(runtimeSettings.ai.gemini))
-
-  if (process.platform === 'darwin') {
-    app.dock?.hide()
-  }
-  windowManager = new PetWindowManager(rootDir, path.join(rootDir, 'build/preload/index.js'))
-  windowManager.createAll()
-  tray = createTray(rootDir, windowManager)
-
-  registerIpc({
-    windowManager,
-    historyStore,
-    profileStore,
-    petRegistry,
-    providerRegistry,
-    settings: runtimeSettings,
-    settingsPath: userSettingPath,
-  })
-
-  autoUpdater.checkForUpdatesAndNotify()
-
-  globalShortcut.register('CommandOrControl+Shift+R', () => {
-    if (windowManager) {
-      windowManager.recallAtCursor()
+    const userSettingPath = path.join(app.getPath('userData'), 'setting.json')
+    if (!fs.existsSync(userSettingPath)) {
+      fs.copyFileSync(path.join(rootDir, 'config/setting.json'), userSettingPath)
     }
-  })
-
-  const syncWindows = (): void => {
-    if (windowManager) {
-      windowManager.syncDisplays()
+    const settings = JSON.parse(fs.readFileSync(userSettingPath, 'utf8')) as Settings
+    const bundledPetsDir = path.join(rootDir, 'pets')
+    const userPetsDir = path.join(app.getPath('userData'), 'pets')
+    const petsDir = app.isPackaged ? userPetsDir : bundledPetsDir
+    if (app.isPackaged) {
+      seedUserPets(bundledPetsDir, userPetsDir)
     }
-  }
-  screen.on('display-added', syncWindows)
-  screen.on('display-removed', syncWindows)
-  screen.on('display-metrics-changed', syncWindows)
-})
+    const activePet = resolveDevelopmentPetId(petsDir) ?? settings.pet.active
+    const runtimeSettings: Settings = {
+      ...settings,
+      pet: { ...settings.pet, active: activePet },
+    }
+
+    const historyStore = new PetScopedStore<ChatMessage[]>(
+      path.join(app.getPath('userData'), 'chat_history.json'),
+      runtimeSettings.pet.active,
+      [],
+      (value): value is ChatMessage[] => Array.isArray(value),
+    )
+    const profileStore = new PetScopedStore<PetProfile>(
+      path.join(app.getPath('userData'), 'pet_profile.json'),
+      runtimeSettings.pet.active,
+      {},
+      (value): value is PetProfile =>
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value) &&
+        ('nickname' in value || Object.keys(value).length === 0),
+    )
+    const petRegistry = new PetRegistry(petsDir)
+    const providerRegistry = new ProviderRegistry()
+
+    providerRegistry.register(new OllamaProvider(runtimeSettings.ai.ollama))
+    providerRegistry.register(new OpenAIProvider(runtimeSettings.ai.openai))
+    providerRegistry.register(new AnthropicProvider(runtimeSettings.ai.anthropic))
+    providerRegistry.register(new GeminiProvider(runtimeSettings.ai.gemini))
+
+    if (process.platform === 'darwin') {
+      app.dock?.hide()
+    }
+    windowManager = new PetWindowManager(rootDir, path.join(rootDir, 'build/preload/index.js'))
+    windowManager.createAll()
+    tray = createTray(rootDir, windowManager)
+
+    registerIpc({
+      windowManager,
+      historyStore,
+      profileStore,
+      petRegistry,
+      providerRegistry,
+      settings: runtimeSettings,
+      settingsPath: userSettingPath,
+    })
+
+    autoUpdater.checkForUpdatesAndNotify()
+
+    globalShortcut.register('CommandOrControl+Shift+R', () => {
+      if (windowManager) {
+        windowManager.recallAtCursor()
+      }
+    })
+
+    const syncWindows = (): void => {
+      if (windowManager) {
+        windowManager.syncDisplays()
+      }
+    }
+    screen.on('display-added', syncWindows)
+    screen.on('display-removed', syncWindows)
+    screen.on('display-metrics-changed', syncWindows)
+  })
+  .catch((error) => {
+    dialog.showErrorBox('초기화 실패', String(error?.stack ?? error))
+    app.quit()
+  })
 
 app.on('window-all-closed', () => app.quit())
 app.on('will-quit', () => {
